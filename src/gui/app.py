@@ -13,6 +13,7 @@ import webview
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 import socket
 from contextlib import closing
+from src.gui.views.browser_view import browser_bp
 
 # Add the parent directory to sys.path so we can import from src
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -42,6 +43,10 @@ app = Flask(__name__,
             template_folder='templates')
 app.secret_key = os.urandom(24)
 
+# Tắt cache cho các template để phát hiện thay đổi ngay lập tức
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Không cache tài nguyên tĩnh
+
 # Global variables
 agent = None
 agent_thread = None
@@ -61,36 +66,76 @@ def initialize_agent(browser_type="chromium", headless=False):
     """Initialize the browser automation agent"""
     global agent, is_browser_running
     try:
-        # Kiểm tra BrowserController hiện tại
-        from automation.browser_controller import BrowserController
+        logger.info("Initializing browser automation agent")
+        
+        # 1. Kiểm tra BrowserController hiện tại
+        from src.automation.browser_controller import BrowserController
         current_browser_controller = BrowserController.get_current_instance()
         
-        # Nếu đã có instance BrowserController và browser đang chạy, sử dụng lại
-        if current_browser_controller and current_browser_controller.browser is not None:
-            # Kiểm tra xem page còn hoạt động không
-            try:
-                if current_browser_controller.page and current_browser_controller.page.url:
-                    logger.info(f"Sử dụng lại BrowserController hiện tại, page hiện tại: {current_browser_controller.page.url}")
-                    # Đảm bảo agent sử dụng BrowserController hiện tại
-                    if agent is None:
-                        agent = BrowserAutomationAgent(
-                            browser_controller=current_browser_controller,
-                            browser_type=browser_type,
-                            headless=False,
-                            human_like=True
-                        )
-                    is_browser_running = True
-                    return True
-            except Exception as e:
-                logger.warning(f"BrowserController hiện tại có vấn đề: {str(e)}, sẽ khởi tạo mới")
+        # 2. Kiểm tra xem BrowserController hiện tại có hoạt động không
+        if current_browser_controller:
+            logger.info("Đã tìm thấy BrowserController hiện tại")
+            browser_working = False
+            
+            # Kiểm tra xem browser của controller còn hoạt động không
+            if hasattr(current_browser_controller, 'browser') and current_browser_controller.browser:
+                if hasattr(current_browser_controller, 'page') and current_browser_controller.page:
+                    try:
+                        # Kiểm tra trang có hoạt động không bằng cách lấy URL hiện tại
+                        current_url = current_browser_controller.page.url
+                        logger.info(f"Trình duyệt hiện tại đang hoạt động (URL: {current_url})")
+                        browser_working = True
+                    except Exception as e:
+                        logger.warning(f"Page hiện tại không hoạt động: {str(e)}")
+                        # Thử khởi động lại page nếu browser vẫn hoạt động
+                        try:
+                            if current_browser_controller.browser:
+                                # Tạo context mới nếu cần
+                                if not current_browser_controller.context:
+                                    logger.info("Tạo context mới")
+                                    current_browser_controller.context = current_browser_controller.browser.new_context()
+                                
+                                # Tạo page mới
+                                logger.info("Tạo page mới trong browser hiện tại")
+                                current_browser_controller.page = current_browser_controller.context.new_page()
+                                current_browser_controller.pages["main"] = current_browser_controller.page
+                                browser_working = True
+                        except Exception as e2:
+                            logger.warning(f"Không thể tạo page mới: {str(e2)}")
+            
+            # Nếu browser hiện tại hoạt động, sử dụng nó
+            if browser_working:
+                logger.info("Sử dụng lại browser hiện tại")
+                
+                # Cập nhật cấu hình nếu cần
+                current_browser_controller.human_like_mode = True
+                
+                # Đảm bảo agent sử dụng BrowserController hiện tại
+                if agent is None:
+                    logger.info("Tạo agent mới với browser hiện tại")
+                    agent = BrowserAutomationAgent(
+                        browser_controller=current_browser_controller,
+                        browser_type=browser_type,
+                        headless=False,
+                        human_like=True
+                    )
+                else:
+                    logger.info("Cập nhật agent hiện tại với browser hiện tại")
+                    agent.browser = current_browser_controller
+                
+                is_browser_running = True
+                return True
         
         # Nếu chưa có hoặc browser không còn hoạt động, tạo mới
+        logger.info("Khởi tạo browser mới")
         if agent is not None and hasattr(agent, 'browser') and agent.browser is not None:
             try:
+                logger.info("Đóng browser cũ")
                 agent._cleanup()  # Đóng browser cũ nếu có
             except Exception as e:
                 logger.warning(f"Không thể đóng browser cũ: {str(e)}")
                 
+        # Tạo agent mới        
         agent = BrowserAutomationAgent(
             browser_type=browser_type,
             headless=False,  # Luôn hiển thị giao diện
@@ -106,6 +151,7 @@ def initialize_agent(browser_type="chromium", headless=False):
         }
         
         # Start browser
+        logger.info("Khởi động browser mới")
         if agent.browser.start_browser(**browser_config):
             logger.info("Browser started successfully")
             is_browser_running = True
@@ -121,17 +167,70 @@ def run_command(command):
     """Run a command in the browser agent"""
     global current_status, process_output, agent, is_browser_running
     
-    if not is_browser_running or not agent or not hasattr(agent, 'browser') or not agent.browser:
-        return {"success": False, "message": "Browser is not running"}
+    # Kiểm tra và đảm bảo rằng browser đang chạy
+    if not is_browser_running or not agent or not hasattr(agent, 'browser'):
+        # Cố gắng khởi tạo lại agent nếu chưa chạy
+        logger.info("Browser chưa được khởi tạo, đang cố gắng khởi tạo...")
+        success = initialize_agent()
+        if not success:
+            logger.error("Không thể khởi tạo browser")
+            return {"success": False, "message": "Browser is not running and could not be started"}
     
-    # Kiểm tra page trước khi thực hiện lệnh
+    # Kiểm tra đảm bảo browser_controller có sẵn và hoạt động
+    if not hasattr(agent, 'browser') or not agent.browser:
+        logger.error("Không tìm thấy browser controller")
+        return {"success": False, "message": "Browser controller not found"}
+    
+    # Đảm bảo rằng browser, context và page đã được tạo và đang hoạt động
+    browser_controller = agent.browser
     try:
-        if not agent.browser._ensure_page():
-            logger.error("Page không còn hoạt động, không thể thực hiện lệnh")
-            return {"success": False, "message": "Page không còn hoạt động, không thể thực hiện lệnh"}
+        # Kiểm tra xem browser còn hoạt động không
+        if not hasattr(browser_controller, 'browser') or not browser_controller.browser:
+            logger.error("Browser không tồn tại hoặc đã bị đóng")
+            # Thử khởi động lại
+            success = initialize_agent()
+            if not success:
+                return {"success": False, "message": "Browser không tồn tại và không thể khởi động lại"}
+            browser_controller = agent.browser
+        
+        # Kiểm tra xem page có hoạt động không bằng cách truy cập URL
+        try:
+            if not hasattr(browser_controller, 'page') or not browser_controller.page:
+                logger.warning("Page không tồn tại, đang tạo mới...")
+                # Thử tạo page mới nếu có thể
+                if hasattr(browser_controller, 'context') and browser_controller.context:
+                    browser_controller.page = browser_controller.context.new_page()
+                    browser_controller.pages["main"] = browser_controller.page
+                else:
+                    # Cần khởi động lại toàn bộ browser
+                    logger.warning("Context không tồn tại, cần khởi động lại browser")
+                    success = browser_controller.start_browser(headless=False)
+                    if not success:
+                        return {"success": False, "message": "Không thể khởi động lại browser"}
+            else:
+                # Kiểm tra xem page có hoạt động không
+                current_url = browser_controller.page.url
+                logger.info(f"Page hiện tại đang hoạt động tại URL: {current_url}")
+        except Exception as e:
+            logger.warning(f"Lỗi khi kiểm tra page: {str(e)}")
+            # Thử khởi động lại page
+            try:
+                logger.info("Đang thử tạo page mới...")
+                if hasattr(browser_controller, 'context') and browser_controller.context:
+                    browser_controller.page = browser_controller.context.new_page()
+                    browser_controller.pages["main"] = browser_controller.page
+                else:
+                    # Cần khởi động lại toàn bộ browser
+                    logger.warning("Context không tồn tại, cần khởi động lại browser")
+                    success = browser_controller.start_browser(headless=False)
+                    if not success:
+                        return {"success": False, "message": "Không thể khởi động lại browser"}
+            except Exception as e2:
+                logger.error(f"Không thể tạo page mới: {str(e2)}")
+                return {"success": False, "message": f"Không thể tạo page mới: {str(e2)}"}
     except Exception as e:
-        logger.error(f"Lỗi khi kiểm tra page: {str(e)}")
-        return {"success": False, "message": f"Lỗi khi kiểm tra page: {str(e)}"}
+        logger.error(f"Lỗi khi kiểm tra browser: {str(e)}")
+        return {"success": False, "message": f"Lỗi khi kiểm tra browser: {str(e)}"}
     
     current_status = "running"
     process_output = []
@@ -183,69 +282,92 @@ def run_command(command):
                         step_description += f"Type '{value}' into {selector or description}"
                     elif action == 'click':
                         step_description += f"Click on {selector or description}"
-                    elif action == 'find_and_click':
-                        step_description += f"Find and click on '{description}'"
-                    elif action == 'scroll':
-                        step_description += f"Scroll {step.get('direction', 'down')}"
                     elif action == 'wait':
-                        step_description += f"Wait {step.get('time', 1.0)} seconds"
+                        step_description += f"Wait for {step.get('time', 1)} seconds"
                     else:
-                        step_description += f"{action} | {step}"
+                        step_description += f"{action} {selector or description or value}"
                     
                     process_output.append(step_description)
                     
-                # Execute steps
-                try:
-                    # Kiểm tra lại page một lần nữa trước khi thực hiện các bước
-                    if not agent.browser._ensure_page():
-                        process_output.append("Error: Page is not active anymore")
-                        current_status = "error"
-                        return {"success": False, "message": "Error: Page is not active anymore"}
+                    # Execute step
+                    try:
+                        if action == 'click' and selector:
+                            agent.browser.click_element(selector, description=description, timeout=30000)
+                        elif action == 'click' and description:
+                            agent.browser.click_element_by_description(description, timeout=30000)
+                        elif action == 'type' and selector:
+                            agent.browser.type_text(selector, value, description=description)
+                        elif action == 'type' and description:
+                            agent.browser.type_into_element_by_description(description, value)
+                        elif action == 'wait':
+                            wait_time = float(step.get("time", 1.0))
+                            time.sleep(wait_time)
+                        elif action == 'scroll':
+                            direction = step.get("direction", "down")
+                            distance = int(step.get("distance", 500))
+                            agent.browser.human_like_scroll(direction=direction, distance=distance)
+                        elif action == 'hover' and selector:
+                            agent.browser.hover_element(selector, description=description)
+                        elif action == 'hover' and description:
+                            agent.browser.hover_element_by_description(description)
                         
-                    success = agent.browser.execute_human_like_workflow(steps)
-                    if success:
-                        process_output.append("Successfully executed all steps")
-                    else:
-                        process_output.append("Error executing workflow steps")
-                        current_status = "error"
-                        return {"success": False, "message": "Error executing workflow steps"}
-                except Exception as e:
-                    process_output.append(f"Error executing workflow: {str(e)}")
-                    current_status = "error"
-                    return {"success": False, "message": f"Error executing workflow: {str(e)}"}
-            else:
-                process_output.append("No steps to execute")
+                        # Added delay between steps for stability
+                        time.sleep(0.5)
+                        
+                    except Exception as e:
+                        process_output.append(f"Error executing step: {str(e)}")
+                        logger.error(f"Error executing step {idx}: {str(e)}")
+                        # Continue with next step after error
             
+            process_output.append("Command executed successfully!")
             current_status = "idle"
             return {"success": True, "message": "Command executed successfully"}
             
         except Exception as e:
-            process_output.append(f"Error: {str(e)}")
+            logger.error(f"Error parsing command: {str(e)}")
+            process_output.append(f"Error parsing command: {str(e)}")
             current_status = "error"
-            logger.error(f"Error executing command: {str(e)}")
-            return {"success": False, "message": str(e)}
+            return {"success": False, "message": f"Error parsing command: {str(e)}"}
     except Exception as e:
+        logger.error(f"Error running command: {str(e)}")
         process_output.append(f"Error: {str(e)}")
         current_status = "error"
-        logger.error(f"Error in run_command: {str(e)}")
         return {"success": False, "message": str(e)}
-    finally:
-        current_status = "idle"
 
 def run_command_thread(command):
     """Run a command in a separate thread"""
-    global agent_thread
+    global agent_thread, current_status, process_output
     
     # If there's already a thread running, don't start a new one
     if agent_thread and agent_thread.is_alive():
         return {"success": False, "message": "A command is already running"}
     
-    # Create and start the thread
-    agent_thread = threading.Thread(target=run_command, args=(command,))
-    agent_thread.daemon = True
-    agent_thread.start()
+    # Đảm bảo trạng thái ban đầu
+    current_status = "running"
+    process_output = []
     
-    return {"success": True, "message": "Command started"}
+    try:
+        # Đảm bảo browser controller đã được khởi tạo đúng trước khi bắt đầu
+        if not is_browser_running:
+            process_output.append("Browser chưa chạy, khởi động tự động...")
+            success = initialize_agent()
+            if not success:
+                process_output.append("Không thể khởi động browser!")
+                current_status = "error"
+                return {"success": False, "message": "Không thể khởi động browser"}
+            process_output.append("Browser đã được khởi động thành công")
+            
+        # Create and start the thread
+        agent_thread = threading.Thread(target=run_command, args=(command,))
+        agent_thread.daemon = True
+        agent_thread.start()
+        
+        return {"success": True, "message": "Command started in background"}
+    except Exception as e:
+        logger.error(f"Error starting command thread: {str(e)}")
+        process_output.append(f"Error: {str(e)}")
+        current_status = "error"
+        return {"success": False, "message": str(e)}
 
 def stop_browser():
     """Stop the browser and clean up resources"""
@@ -277,43 +399,128 @@ def take_screenshot():
 @app.route('/')
 def index():
     """Render the main page"""
-    return render_template('index.html')
+    # Thêm tham số timestamp để tránh cache template
+    timestamp = int(time.time())
+    return render_template('index.html', timestamp=timestamp)
+
+@app.route('/api/reload-template')
+def api_reload_template():
+    """API endpoint để tải lại template mà không cần tải lại cả trang"""
+    template_name = request.args.get('template', 'index.html')
+    timestamp = int(time.time())
+    html_content = render_template(template_name, timestamp=timestamp)
+    return html_content
+
+@app.route('/api/status', methods=['GET'])
+def api_status():
+    """API endpoint để lấy thông tin trạng thái chung"""
+    try:
+        # Kiểm tra xem có browser controller hiện tại không
+        from src.automation.browser_controller import BrowserController
+        current_browser = BrowserController.get_current_instance()
+        has_current_browser = current_browser is not None
+        
+        # Lấy URL hiện tại nếu có browser đang chạy
+        current_url = None
+        if has_current_browser and hasattr(current_browser, 'page') and current_browser.page:
+            try:
+                current_url = current_browser.page.url
+            except Exception:
+                pass
+        
+        # Trả về thông tin
+        return jsonify({
+            "success": True,
+            "has_current_browser": has_current_browser,
+            "is_browser_running": is_browser_running,
+            "current_url": current_url,
+            "status": current_status
+        })
+    except Exception as e:
+        logger.error(f"Lỗi khi kiểm tra trạng thái: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"Lỗi: {str(e)}",
+            "has_current_browser": False,
+            "is_browser_running": False
+        })
 
 @app.route('/api/start-browser', methods=['POST'])
 def api_start_browser():
-    """API endpoint to start the browser"""
+    """API endpoint to start the browser or reuse existing browser"""
     global agent, is_browser_running
     
     try:
-        # Kiểm tra BrowserController hiện tại
-        from automation.browser_controller import BrowserController
-        current_browser_controller = BrowserController.get_current_instance()
-        
-        # Nếu đã có instance BrowserController và browser đang chạy
-        if current_browser_controller and current_browser_controller.browser is not None:
-            # Kiểm tra xem page còn hoạt động không
-            try:
-                url = current_browser_controller.page.url if hasattr(current_browser_controller, 'page') and current_browser_controller.page else None
-                if url:
-                    logger.info(f"Browser đã khởi động, page hiện tại: {url}")
-                    # Đảm bảo agent sử dụng BrowserController hiện tại
-                    if agent is None:
-                        agent = BrowserAutomationAgent(
-                            browser_controller=current_browser_controller,
-                            browser_type=request.json.get('browser_type', 'chromium'),
-                            headless=False,
-                            human_like=True
-                        )
-                    is_browser_running = True
-                    return jsonify({"success": True, "message": "Browser đã khởi động trước đó"})
-            except Exception as e:
-                logger.warning(f"Browser đang chạy nhưng page không hoạt động, sẽ khởi động lại: {str(e)}")
-                # Tiếp tục khởi động lại browser phía dưới
-                is_browser_running = False
-    
+        use_existing = request.json.get('use_existing', False)
         browser_type = request.json.get('browser_type', 'chromium')
         headless = False  # Luôn đặt headless=False để hiển thị giao diện
         
+        # Kiểm tra BrowserController hiện tại
+        from src.automation.browser_controller import BrowserController
+        current_browser_controller = BrowserController.get_current_instance()
+        
+        # Nếu yêu cầu sử dụng browser hiện tại
+        if use_existing and current_browser_controller and current_browser_controller.browser is not None:
+            logger.info(f"Đang thử kết nối với trình duyệt hiện có")
+            try:
+                # Kiểm tra xem page có hoạt động không
+                current_url = None
+                if hasattr(current_browser_controller, 'page') and current_browser_controller.page:
+                    try:
+                        current_url = current_browser_controller.page.url
+                        logger.info(f"Trình duyệt hiện tại hoạt động, URL: {current_url}")
+                        
+                        # Đảm bảo agent sử dụng BrowserController hiện tại
+                        if agent is None:
+                            agent = BrowserAutomationAgent(
+                                browser_controller=current_browser_controller,
+                                browser_type=browser_type,
+                                headless=False,
+                                human_like=True
+                            )
+                        else:
+                            # Cập nhật agent với browser hiện tại
+                            agent.browser = current_browser_controller
+                            
+                        is_browser_running = True
+                        return jsonify({"success": True, "message": "Đã kết nối với trình duyệt hiện có", "current_url": current_url})
+                    except Exception as e:
+                        logger.warning(f"Page hiện tại không hoạt động: {str(e)}")
+                        
+                        # Nếu browser còn nhưng page không hoạt động, tạo page mới
+                        if current_browser_controller.browser:
+                            try:
+                                # Đảm bảo context
+                                if not current_browser_controller.context:
+                                    logger.info("Tạo context mới")
+                                    current_browser_controller.context = current_browser_controller.browser.new_context()
+                                
+                                # Tạo page mới
+                                logger.info("Tạo page mới trong browser hiện tại")
+                                current_browser_controller.page = current_browser_controller.context.new_page()
+                                current_browser_controller.pages["main"] = current_browser_controller.page
+                                
+                                # Cập nhật agent
+                                if agent is None:
+                                    agent = BrowserAutomationAgent(
+                                        browser_controller=current_browser_controller,
+                                        browser_type=browser_type,
+                                        headless=False,
+                                        human_like=True
+                                    )
+                                else:
+                                    agent.browser = current_browser_controller
+                                
+                                is_browser_running = True
+                                return jsonify({"success": True, "message": "Đã tạo page mới trong trình duyệt hiện có"})
+                            except Exception as e2:
+                                logger.warning(f"Không thể tạo page mới: {str(e2)}")
+                                # Tiếp tục với khởi động mới
+            except Exception as e:
+                logger.warning(f"Lỗi khi kết nối trình duyệt hiện có: {str(e)}")
+                # Tiếp tục khởi động mới
+        
+        # Khởi động trình duyệt mới nếu không dùng hiện có hoặc hiện có không hoạt động
         # Đóng browser cũ nếu có
         if agent is not None and hasattr(agent, 'browser') and agent.browser is not None:
             try:
@@ -337,7 +544,7 @@ def api_start_browser():
         }
         
         # Khởi động browser
-        logger.info("Đang khởi động browser...")
+        logger.info("Đang khởi động browser mới...")
         if agent.browser.start_browser(**browser_config):
             logger.info("Browser khởi động thành công")
             is_browser_running = True
@@ -375,7 +582,7 @@ def api_run_command():
             return jsonify({"success": False, "message": "Không có lệnh nào được cung cấp"})
         
         # Kiểm tra BrowserController hiện tại
-        from automation.browser_controller import BrowserController
+        from src.automation.browser_controller import BrowserController
         current_browser_controller = BrowserController.get_current_instance()
         
         # Nếu có BrowserController với browser đang chạy, sử dụng nó
@@ -509,21 +716,94 @@ def api_confirm_workflow():
     data = request.json
     steps = data.get('steps', [])
     url = data.get('url', None)
+    
+    # Đảm bảo trình duyệt đã được khởi động
     if not is_browser_running:
+        logger.info("Browser chưa khởi động, khởi động tự động...")
         success = initialize_agent()
         if not success:
             return jsonify({'success': False, 'message': 'Không thể khởi động trình duyệt'}), 200
+    
+    # Đảm bảo page đang hoạt động
+    try:
+        browser_agent = get_agent()
+        if not browser_agent.browser._ensure_page():
+            logger.error("Page không còn hoạt động, thử khởi động lại browser")
+            try:
+                # Khởi động lại browser nếu page không hoạt động
+                success = browser_agent.browser.start_browser(headless=False)
+                if not success:
+                    return jsonify({'success': False, 'message': 'Không thể khởi động lại trình duyệt'}), 200
+                
+                # Nếu có URL, điều hướng đến URL trước khi thực hiện các bước
+                if url:
+                    browser_agent.navigate_to(url)
+                    time.sleep(2)  # Đợi trang tải
+            except Exception as e:
+                logger.error(f"Lỗi khi khởi động lại browser: {str(e)}")
+                return jsonify({'success': False, 'message': f'Lỗi khi khởi động lại browser: {str(e)}'}), 200
+    except Exception as e:
+        logger.error(f"Lỗi khi kiểm tra page: {str(e)}")
+        return jsonify({'success': False, 'message': f'Lỗi khi kiểm tra page: {str(e)}'}), 200
+    
+    # Xác nhận workflow
     confirmed_steps = confirm_workflow(steps, get_agent().browser, parsed_url=url)
     if not confirmed_steps:
         return jsonify({'success': False, 'message': 'Workflow bị hủy hoặc không xác nhận'}), 200
+    
     # Thực thi workflow
     try:
-        success = get_agent().browser.execute_human_like_workflow(confirmed_steps)
+        # Kiểm tra lại page một lần nữa trước khi thực hiện
+        if not get_agent().browser._ensure_page():
+            # Thử làm mới trang
+            try:
+                current_url = get_agent().browser.page.url
+                get_agent().browser.page.goto(current_url, wait_until="networkidle")
+            except Exception as e:
+                logger.error(f"Lỗi khi làm mới trang: {str(e)}")
+                # Khởi động lại browser nếu cần
+                get_agent().browser.start_browser(headless=False)
+                if url:
+                    get_agent().navigate_to(url)
+        
+        # Sử dụng phương thức execute_human_like_workflow nếu có
+        if hasattr(get_agent().browser, 'execute_human_like_workflow'):
+            success = get_agent().browser.execute_human_like_workflow(confirmed_steps)
+        else:
+            # Fallback đến thực thi thủ công
+            logger.info("Không tìm thấy phương thức execute_human_like_workflow, thực thi thủ công...")
+            success = True
+            for step in confirmed_steps:
+                action = step.get('action', '').lower()
+                
+                if action == 'click' and 'selector' in step:
+                    get_agent().browser.page.click(step['selector'])
+                
+                elif action == 'type' and 'selector' in step and 'value' in step:
+                    get_agent().browser.page.fill(step['selector'], step['value'])
+                
+                elif action == 'wait':
+                    wait_time = float(step.get('time', 1.0))
+                    time.sleep(wait_time)
+                
+                elif action == 'find_and_click':
+                    text = step.get('text') or step.get('description', '')
+                    get_agent().browser.find_and_click_text(text)
+                
+                elif action == 'scroll':
+                    direction = step.get('direction', 'down')
+                    get_agent().browser.scroll_page(direction)
+                else:
+                    logger.error(f"Hành động không xác định: {action}")
+                    success = False
+                    break
+        
         if success:
             return jsonify({'success': True, 'message': 'Đã thực thi workflow thành công'})
         else:
             return jsonify({'success': False, 'message': 'Lỗi khi thực thi workflow'})
     except Exception as e:
+        logger.error(f"Lỗi khi thực thi workflow: {str(e)}")
         return jsonify({'success': False, 'message': f'Lỗi khi thực thi workflow: {str(e)}'})
 
 def run_server(port=None):
@@ -549,6 +829,7 @@ def get_agent():
 
 if __name__ == '__main__':
     try:
+        app.register_blueprint(browser_bp)
         start_gui()
     except KeyboardInterrupt:
         print("Application terminated by user")

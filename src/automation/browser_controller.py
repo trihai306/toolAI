@@ -21,9 +21,15 @@ except ImportError:
     stealth_sync = None
 import base64
 from cryptography.fernet import Fernet
-from automation.human_like_utils import HumanLikeInteraction
+from src.automation.human_like_utils import HumanLikeInteraction
 import random
 import re
+import yaml
+from functools import lru_cache
+from src.utils.logging_utils import get_logger
+from src.automation.helpers.exceptions import BrowserControllerException, BrowserNotAvailable, ElementNotFound, ActionTimeout, PopupNotClosed
+from src.automation.helpers.overlay_handler import OverlayHandler
+from src.automation.helpers.element_inspector import ElementInspector
 
 class BrowserController:
     """Quản lý tất cả các thao tác với trình duyệt web"""
@@ -54,33 +60,39 @@ class BrowserController:
     
     def __init__(self, screenshots_dir="../data", use_ai_fallback=True, browser_type="chromium", use_stealth=True, debug=False,
                  enable_auto_popup_handler=True, enable_cursor_icon=True, cursor_icon_url=None, cursor_move_delay=0.2, enable_highlight=True,
-                 human_like_mode=True, human_profile=None):
+                 human_like_mode=True, human_profile=None, logger=None, overlay_handler=None, element_inspector=None, human_like_interaction=None, config_path=None, config_dict=None):
         """
-        Khởi tạo controller với thư mục lưu ảnh chụp màn hình
+        Khởi tạo controller với DI và config động
+        """
+        # Đọc config động từ YAML nếu có
+        config = {}
+        if config_path:
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = yaml.safe_load(f)
+            except Exception as e:
+                print(f"[Config] Không thể đọc file config: {e}")
+        if config_dict:
+            config.update(config_dict)
+        # Ưu tiên giá trị truyền vào hơn config file
+        screenshots_dir = config.get('screenshots_dir', screenshots_dir)
+        use_ai_fallback = config.get('use_ai_fallback', use_ai_fallback)
+        browser_type = config.get('browser_type', browser_type)
+        use_stealth = config.get('use_stealth', use_stealth)
+        debug = config.get('debug', debug)
+        enable_auto_popup_handler = config.get('enable_auto_popup_handler', enable_auto_popup_handler)
+        enable_cursor_icon = config.get('enable_cursor_icon', enable_cursor_icon)
+        cursor_icon_url = config.get('cursor_icon_url', cursor_icon_url)
+        cursor_move_delay = config.get('cursor_move_delay', cursor_move_delay)
+        enable_highlight = config.get('enable_highlight', enable_highlight)
+        human_like_mode = config.get('human_like_mode', human_like_mode)
+        human_profile = config.get('human_profile', human_profile)
+        # Logger chuẩn hóa
+        self.logger = logger or get_logger("BrowserController")
         
-        Args:
-            screenshots_dir (str): Đường dẫn thư mục lưu ảnh chụp màn hình
-            use_ai_fallback (bool): Sử dụng AI để tìm phần tử khi selector thất bại
-            browser_type (str): Loại trình duyệt ("chromium", "firefox", "webkit")
-            use_stealth (bool): Kích hoạt chế độ stealth để tránh bị phát hiện automation
-            debug (bool): Bật log chi tiết/debug
-            enable_auto_popup_handler (bool): Bật/tắt tự động xử lý popup/overlay
-            enable_cursor_icon (bool): Bật/tắt icon chuột di chuyển tới element
-            cursor_icon_url (str): URL icon chuột
-            cursor_move_delay (float): Thời gian delay khi di chuyển chuột
-            enable_highlight (bool): Bật/tắt highlight element
-        """
         # Đặt instance hiện tại là self
         BrowserController.set_current_instance(self)
         
-        # Cấu hình logging
-        try:
-            from utils.logging_utils import get_logger
-            self.logger = get_logger("BrowserController")
-        except ImportError:
-            import logging
-            self.logger = logging.getLogger("BrowserController")
-            
         self.playwright = None
         self.browser = None
         self.context = None
@@ -106,8 +118,9 @@ class BrowserController:
         os.makedirs(self.downloads_dir, exist_ok=True)
         
         # Khởi tạo các công cụ helper
-        self.element_inspector = None
-        self.overlay_handler = None
+        self.overlay_handler = overlay_handler or OverlayHandler(self, debug)
+        self.element_inspector = element_inspector or ElementInspector(self, debug)
+        self.human_like_interaction = human_like_interaction or (HumanLikeInteraction(self, debug) if human_like_mode else None)
         
         # Lưu trữ các selector đã tìm thấy trước đó để tái sử dụng
         self._selector_cache = {}
@@ -118,14 +131,84 @@ class BrowserController:
         # Cấu hình mô phỏng người dùng thực
         self.human_like_mode = human_like_mode
         self.human_profile = human_profile or {}
-        self.human_like_interaction = None
+
+    def _close_existing_browser(self):
+        """
+        Đóng context và browser cũ nếu có
+        Trả về True nếu đóng thành công, False nếu không có browser đang chạy
+        """
+        closed = False
+        
+        # Kiểm tra và đóng page hiện tại
+        if hasattr(self, 'page') and self.page is not None:
+            try:
+                # Kiểm tra xem page còn hoạt động không trước khi đóng
+                url = self.page.url
+                self.logger.info(f"Đóng page hiện tại (URL: {url})")
+                self.page.close()
+                closed = True
+            except Exception as e:
+                self.logger.warning(f"Không thể đóng page hiện tại: {str(e)}")
+            finally:
+                self.page = None
+        
+        # Kiểm tra và đóng context hiện tại
+        if hasattr(self, 'context') and self.context is not None:
+            try:
+                self.logger.info("Đóng context hiện tại")
+                self.context.close()
+                closed = True
+            except Exception as e:
+                self.logger.warning(f"Không thể đóng context hiện tại: {str(e)}")
+            finally:
+                self.context = None
+        
+        # Kiểm tra và đóng browser hiện tại
+        if hasattr(self, 'browser') and self.browser is not None:
+            try:
+                self.logger.info("Đóng browser hiện tại")
+                self.browser.close()
+                closed = True
+            except Exception as e:
+                self.logger.warning(f"Không thể đóng browser hiện tại: {str(e)}")
+            finally:
+                self.browser = None
+        
+        # Đóng playwright nếu có
+        if hasattr(self, 'playwright') and self.playwright is not None:
+            try:
+                self.logger.info("Đóng playwright hiện tại")
+                self.playwright.stop()
+                closed = True
+            except Exception as e:
+                self.logger.warning(f"Không thể đóng playwright hiện tại: {str(e)}")
+            finally:
+                self.playwright = None
+                
+        # Xóa cache và các biến liên quan
+        self.pages = {}
+        self.active_page_name = "main"
+        
+        return closed
 
     def start_browser(self, headless=False, user_agent=None, viewport_size=None, locale=None):
         """
         Khởi động trình duyệt với các tùy chọn nâng cao
         """
         try:
-            # Đóng context và browser cũ nếu có
+            # Kiểm tra xem browser và page hiện tại còn hoạt động không
+            if hasattr(self, 'browser') and self.browser is not None and hasattr(self, 'page') and self.page is not None:
+                try:
+                    # Thử lấy URL hiện tại để kiểm tra trạng thái
+                    current_url = self.page.url
+                    self.logger.info(f"Trình duyệt hiện tại đang hoạt động (URL: {current_url}), sẽ sử dụng lại")
+                    # Trình duyệt vẫn hoạt động tốt, không cần khởi động lại
+                    return True
+                except Exception as e:
+                    self.logger.warning(f"Trình duyệt hiện tại không hoạt động: {str(e)}, sẽ khởi động lại")
+                    # Tiếp tục và khởi động trình duyệt mới nếu hiện tại không hoạt động
+            
+            # Đóng trình duyệt cũ nếu có
             self._close_existing_browser()
             
             # Đặt self làm instance hiện tại
@@ -179,7 +262,7 @@ class BrowserController:
             # Khởi tạo Enhanced Element Finder nếu được cấu hình
             if self.use_ai_fallback:
                 try:
-                    from ai.enhanced_element_finder import EnhancedElementFinder
+                    from src.ai.enhanced_element_finder import EnhancedElementFinder
                     self.ai_element_finder = EnhancedElementFinder(self, use_page_observer=True, debug=self.debug)
                     if self.debug:
                         self.logger.info("Đã khởi tạo Enhanced Element Finder")
@@ -188,7 +271,7 @@ class BrowserController:
                     if self.debug:
                         self.logger.warning(traceback.format_exc())
                     try:
-                        from ai.ai_element_finder import AIElementFinder
+                        from src.ai.ai_element_finder import AIElementFinder
                         self.ai_element_finder = AIElementFinder(self)
                         if self.debug:
                             self.logger.info("Đã khởi tạo AIElementFinder thay thế")
@@ -198,68 +281,17 @@ class BrowserController:
                         
             # Khởi tạo Human-like Interaction nếu được cấu hình
             if self.human_like_mode:
-                try:
-                    self.human_like_interaction = HumanLikeInteraction(self, debug=self.debug)
-                    if self.human_profile:
-                        self.human_like_interaction.user_profile.update(self.human_profile)
-                        self.human_like_interaction._adjust_params_based_on_profile()
-                    if self.debug:
-                        self.logger.info("Đã khởi tạo Human-like Interaction")
-                except Exception as e:
-                    self.logger.warning(f"Không thể khởi tạo Human-like Interaction: {str(e)}")
-                    if self.debug:
-                        self.logger.warning(traceback.format_exc())
-            
-            # Khởi tạo các công cụ helper
-            try:
-                from .helpers import ElementInspector, OverlayHandler
-                self.element_inspector = ElementInspector(self, debug=self.debug)
-                self.overlay_handler = OverlayHandler(self, debug=self.debug)
+                self.human_like_interaction = HumanLikeInteraction(self.page, self.human_profile)
                 if self.debug:
-                    self.logger.info("Đã khởi tạo công cụ hỗ trợ tìm kiếm phần tử và xử lý overlay (debug mode)")
-            except Exception as e:
-                self.logger.warning(f"Không thể khởi tạo công cụ helper: {str(e)}")
-                    
-            self.logger.info("Trình duyệt đã được khởi động thành công")
+                    self.logger.info("Đã khởi tạo Human-like Interaction")
+                
+            self.logger.info(f"Đã khởi động trình duyệt {self.browser_type} thành công")
             return True
         except Exception as e:
             self.logger.error(f"Lỗi khi khởi động trình duyệt: {str(e)}")
             if self.debug:
                 self.logger.error(traceback.format_exc())
             return False
-
-    def _close_existing_browser(self):
-        """Đóng browser, context và page đang tồn tại trước khi tạo mới"""
-        try:
-            if hasattr(self, 'context') and self.context:
-                try:
-                    self.context.close()
-                    self.logger.info("Đã đóng context cũ")
-                except Exception as e:
-                    self.logger.warning(f"Không thể đóng context cũ: {str(e)}")
-            
-            if hasattr(self, 'browser') and self.browser:
-                try:
-                    self.browser.close()
-                    self.logger.info("Đã đóng browser cũ")
-                except Exception as e:
-                    self.logger.warning(f"Không thể đóng browser cũ: {str(e)}")
-            
-            if hasattr(self, 'playwright') and self.playwright:
-                try:
-                    self.playwright.stop()
-                    self.logger.info("Đã dừng playwright cũ")
-                except Exception as e:
-                    self.logger.warning(f"Không thể dừng playwright cũ: {str(e)}")
-            
-            # Reset các biến thành None
-            self.browser = None
-            self.context = None
-            self.playwright = None
-            self.page = None
-            self.pages = {}
-        except Exception as e:
-            self.logger.warning(f"Lỗi khi đóng trình duyệt cũ: {str(e)}")
 
     def _handle_download(self, download):
         """Xử lý sự kiện tải xuống từ trình duyệt"""
@@ -278,7 +310,7 @@ class BrowserController:
             self.logger.warning(f"Không thể thiết lập dialog handler: {str(e)}")
 
     def close_browser(self):
-        """Đóng trình duyệt"""
+        """Đóng trình duyệt và dọn dẹp cache"""
         try:
             # Dọn dẹp EnhancedElementFinder nếu có
             if hasattr(self, 'ai_element_finder') and self.ai_element_finder:
@@ -290,24 +322,26 @@ class BrowserController:
                     except Exception as e:
                         if self.debug:
                             self.logger.warning(f"Lỗi khi dọn dẹp EnhancedElementFinder: {str(e)}")
-            
             if self.context:
                 self.context.close()
             if self.browser:
                 self.browser.close()
             if self.playwright:
                 self.playwright.stop()
-            
             self.browser = None
             self.context = None
             self.playwright = None
             self.page = None
             self.pages = {}
-            
             # Nếu instance hiện tại là self, đặt thành None
             if BrowserController.get_current_instance() == self:
                 BrowserController.set_current_instance(None)
-            
+            # Dọn dẹp cache LRU
+            try:
+                self.find_element_by_description.cache_clear()
+                self.logger.info("Đã dọn dẹp cache LRU cho find_element_by_description")
+            except Exception as e:
+                self.logger.warning(f"Lỗi khi dọn dẹp cache LRU: {e}")
             self.logger.info("Trình duyệt đã được đóng")
             return True
         except Exception as e:
@@ -316,41 +350,72 @@ class BrowserController:
 
     def navigate_to(self, url, wait_until="load"):
         """
-        Điều hướng đến URL với tùy chọn đợi
+        Điều hướng trình duyệt đến URL được chỉ định
         
         Args:
-            url (str): URL cần điều hướng đến
-            wait_until (str): Sự kiện đợi ("load", "domcontentloaded", "networkidle")
-            
+            url (str): URL đích
+            wait_until (str): Điều kiện để coi trang đã tải xong ('domcontentloaded', 'load', 'networkidle')
+        
         Returns:
-            bool: True nếu thành công, False nếu thất bại
+            bool: True nếu điều hướng thành công, False nếu thất bại
         """
-        if not self._ensure_page():
-            self.logger.error("Không có page để điều hướng!")
-            return False
         try:
-            self.logger.info(f"[DEBUG] Đang điều hướng đến: {url}")
-            self.page.goto(url, wait_until=wait_until, timeout=60000)
-            self.logger.info(f"[DEBUG] Đã điều hướng đến: {url}")
+            # Đảm bảo URL có giao thức
+            if not url.startswith('http://') and not url.startswith('https://'):
+                url = 'https://' + url
+                
+            # Kiểm tra và đảm bảo page tồn tại và hoạt động
+            if not self._ensure_page():
+                self.logger.error("Không thể đảm bảo page hoạt động, không thể điều hướng")
+                return False
             
-            # Cập nhật PageObserver nếu có
-            if hasattr(self, 'ai_element_finder') and self.ai_element_finder:
-                if hasattr(self.ai_element_finder, 'page_observer') and self.ai_element_finder.page_observer and hasattr(self.ai_element_finder.page_observer, 'process_page_update'):
-                    try:
-                        self.ai_element_finder.page_observer.process_page_update()
-                    except Exception as e:
-                        self.logger.warning(f"Không thể cập nhật PageObserver: {str(e)}")
+            self.logger.info(f"Đang điều hướng đến {url}")
             
-            # Highlight tất cả element có thể tương tác với giao diện chuyên nghiệp
-            if hasattr(self, 'element_inspector') and self.element_inspector:
-                try:
-                    self.element_inspector.highlight_all_interactive_elements()
-                except Exception as e:
-                    self.logger.warning(f"Không thể highlight element: {str(e)}")
+            # Thực hiện điều hướng
+            if self.human_like_mode and hasattr(self, 'human_like_interaction') and self.human_like_interaction:
+                # Sử dụng điều hướng giống người thật nếu có
+                self.logger.info("Sử dụng điều hướng giống người thật")
+                self.human_like_interaction.type_in_address_bar(url)
+            else:
+                # Điều hướng thông thường
+                response = self.page.goto(url, wait_until=wait_until, timeout=60000)
+                if response is None:
+                    self.logger.warning(f"Không nhận được response khi điều hướng đến {url}")
+                elif not response.ok:
+                    self.logger.warning(f"Phản hồi không thành công: {response.status} từ {url}")
             
+            # Đợi thêm cho trang tải hoàn tất
+            try:
+                self.page.wait_for_load_state(wait_until, timeout=30000)
+            except Exception as e:
+                self.logger.warning(f"Cảnh báo khi chờ load_state: {str(e)}")
+            
+            # Kiểm tra tự động popup nếu được cấu hình
+            if self.enable_auto_popup_handler:
+                self._handle_popups_and_overlays()
+            
+            self.logger.info(f"Đã điều hướng đến {url} thành công")
             return True
+            
         except Exception as e:
             self.logger.error(f"Lỗi khi điều hướng đến {url}: {str(e)}")
+            if self.debug:
+                self.logger.error(traceback.format_exc())
+                
+            # Nếu page không còn hoạt động, thử khởi tạo lại browser
+            try:
+                self.logger.info("Đang thử khởi động lại trình duyệt sau lỗi điều hướng")
+                if self.start_browser(headless=False):
+                    # Điều hướng lại sau khi khởi động lại browser thành công
+                    self.logger.info(f"Thử điều hướng lại sau khi khởi động lại browser: {url}")
+                    response = self.page.goto(url, wait_until=wait_until, timeout=60000)
+                    # Đợi thêm cho trang tải hoàn tất sau khi restart
+                    self.page.wait_for_load_state(wait_until, timeout=30000)
+                    self.logger.info("Điều hướng thành công sau khi khởi động lại trình duyệt")
+                    return True
+            except Exception as restart_error:
+                self.logger.error(f"Không thể khởi động lại trình duyệt: {str(restart_error)}")
+                
             return False
 
     def _normalize_selector(self, selector, description=None):
@@ -1771,67 +1836,164 @@ class BrowserController:
             return False
 
     def _ensure_page(self):
-        """Đảm bảo rằng có một trang đang hoạt động"""
-        if not self.page:
-            self.logger.error("Trình duyệt chưa được khởi động hoặc page không tồn tại. Đang thử khởi tạo browser mới.")
-            # Thử khởi động browser mới nếu không có page
-            try:
-                # Đóng browser cũ nếu còn
-                self._close_existing_browser()
-                # Khởi động browser mới
-                return self.start_browser(headless=False)
-            except Exception as e:
-                self.logger.error(f"Không thể khởi động browser mới: {e}")
-                return False
-        
-        # Kiểm tra xem page có đang mở không
+        """
+        Đảm bảo đối tượng page tồn tại và hợp lệ
+        Nếu page không tồn tại hoặc bị đóng, thử tạo mới
+        Trả về True nếu page hoạt động, False nếu không thể tạo page
+        """
         try:
-            # Thử truy cập một thuộc tính để kiểm tra page còn hoạt động không
-            url = self.page.url
-            
-            # Thử phương thức kiểm tra cụ thể hơn
-            try:
-                # Kiểm tra DOM, nếu có lỗi thì page có thể đã bị đóng
-                element_count = self.page.evaluate("() => document.querySelectorAll('*').length")
-                if element_count <= 0:
-                    self.logger.warning("Page tồn tại nhưng không có element nào, có thể đã bị đóng")
-                    # Thử tạo lại page
-                    if self.context:
-                        self.page = self.context.new_page()
-                        self.pages["main"] = self.page
-                        return True
-            except Exception:
-                # Vẫn giữ tham chiếu đến page, nhưng có thể bị lỗi ở một hàm cụ thể
-                # Tiếp tục xử lý bên dưới
-                pass
-                
+            # Kiểm tra xem page có tồn tại và có hợp lệ không
+            if self.page is not None:
+                try:
+                    # Kiểm tra page có hoạt động không bằng cách lấy URL
+                    current_url = self.page.url
+                    self.logger.debug(f"Page hoạt động bình thường, URL hiện tại: {current_url}", extra={"url": current_url})
+                    return True
+                except Exception as e:
+                    self.logger.warning(f"Page hiện tại không hoạt động: {str(e)}", exc_info=True)
+            if self.context is None or not self.browser:
+                self.logger.warning("Context hoặc browser không tồn tại, cần khởi động lại browser")
+                success = self.start_browser(headless=False)
+                if not success:
+                    raise BrowserNotAvailable("Không thể khởi động lại browser")
+                return success
+            self.logger.info("Tạo page mới")
+            self.page = self.context.new_page()
+            self.pages["main"] = self.page
+            if self.use_stealth and stealth_sync is not None:
+                try:
+                    stealth_sync(self.page)
+                    self.logger.info("Đã kích hoạt stealth cho page mới")
+                except Exception as e:
+                    self.logger.warning(f"Không thể kích hoạt stealth: {str(e)}", exc_info=True)
+            self._setup_dialog_handlers()
+            self.logger.info("Đã tạo mới page thành công")
             return True
+        except BrowserNotAvailable as e:
+            self.logger.error(f"Lỗi khi đảm bảo page: {str(e)}", exc_info=True)
+            raise
         except Exception as e:
-            self.logger.error(f"Page không còn hoạt động: {str(e)}. Thử khởi tạo lại page và browser...")
-            try:
-                # Thử tạo page mới nếu context vẫn còn
-                if self.context:
-                    try:
-                        self.page = self.context.new_page()
-                        self.pages["main"] = self.page
-                        self.logger.info("Đã tạo lại page mới thành công")
-                        
-                        # Áp dụng stealth nếu được yêu cầu và có thư viện
-                        if self.use_stealth and stealth_sync is not None:
-                            try:
-                                stealth_sync(self.page)
-                                self.logger.info("Đã kích hoạt playwright-stealth cho page mới.")
-                            except Exception as e:
-                                self.logger.warning(f"Không thể kích hoạt stealth: {str(e)}")
+            self.logger.error(f"Lỗi không xác định khi đảm bảo page: {str(e)}", exc_info=True)
+            if self.debug:
+                self.logger.error(traceback.format_exc())
+            return False
+
+    def _handle_popups_and_overlays(self):
+        """
+        Xử lý các popup, overlay tự động
+        """
+        try:
+            # Kiểm tra các popup/overlay phổ biến
+            selectors = [
+                # Nút đóng popup/overlay
+                "button.close, .close-btn, .btn-close, [aria-label='Close'], [title='Close'], .modal-close, .popup-close, .dismiss",
+                # Icon đóng (x)
+                "[class*='close'] i.fa-times, [class*='close'] i.fa-xmark, .modal i.fa-times, .popup i.fa-times",
+                # Cookie consent
+                "[class*='cookie'] button, [id*='cookie'] button, [class*='consent'] button, [id*='consent'] button",
+                # Quảng cáo, newsletter
+                "[class*='banner'] .close, [class*='ad'] .close, [class*='newsletter'] .close, [class*='popup'] .close",
+                # Overlay nền mờ
+                ".modal-backdrop, .overlay"
+            ]
+            
+            found = False
+            self.logger.info("Đang kiểm tra và xử lý các popup/overlay...")
+            
+            for selector in selectors:
+                try:
+                    # Thử tìm phần tử
+                    elements = self.page.query_selector_all(selector)
+                    for element in elements:
+                        try:
+                            # Kiểm tra xem phần tử có nhìn thấy được không
+                            if element.is_visible():
+                                # Lấy thông tin về phần tử
+                                tag_name = element.evaluate("el => el.tagName.toLowerCase()")
                                 
-                        return True
-                    except Exception as e2:
-                        self.logger.error(f"Không thể tạo lại page từ context: {str(e2)}")
+                                # In thông tin về button đóng
+                                self.logger.info(f"Đang đóng {tag_name} với selector '{selector}'")
+                                
+                                # Click để đóng
+                                element.click(force=True)
+                                
+                                # Đặt cờ đã tìm thấy
+                                found = True
+                                
+                                # Đợi một chút để hiệu ứng đóng hoàn tất
+                                time.sleep(0.5)
+                        except Exception as element_e:
+                            self.logger.debug(f"Không thể tương tác với phần tử '{selector}': {str(element_e)}")
+                except Exception as selector_e:
+                    self.logger.debug(f"Lỗi khi tìm '{selector}': {str(selector_e)}")
+            
+            # Thử các phương pháp JavaScript để đóng popup
+            if not found:
+                try:
+                    # Thử đóng các modal Bootstrap
+                    self.page.evaluate("""() => {
+                        // Đóng các modal Bootstrap
+                        if (typeof $ !== 'undefined' && $.fn && $.fn.modal) {
+                            $('.modal').modal('hide');
+                        }
                         
-                # Nếu tạo page mới thất bại hoặc context không còn, khởi động lại browser
-                self.logger.info("Đang khởi động lại browser hoàn toàn mới...")
-                self._close_existing_browser()
-                return self.start_browser(headless=False)
-            except Exception as e3:
-                self.logger.error(f"Không thể khôi phục browser: {str(e3)}")
-                return False
+                        // Đóng modal bằng các phương thức native
+                        document.querySelectorAll('.modal, .popup, [role="dialog"]').forEach(el => {
+                            // Tìm và click nút đóng
+                            const closeBtn = el.querySelector('.close, .btn-close, [data-dismiss], [aria-label="Close"]');
+                            if (closeBtn) {
+                                closeBtn.click();
+                            } else {
+                                // Thử ẩn modal
+                                el.style.display = 'none';
+                                // Hoặc xóa khỏi DOM
+                                if (el.parentNode) {
+                                    el.parentNode.removeChild(el);
+                                }
+                            }
+                        });
+                        
+                        // Xóa các overlay
+                        document.querySelectorAll('.modal-backdrop, .overlay, .fade').forEach(el => {
+                            el.parentNode.removeChild(el);
+                        });
+                        
+                        // Bỏ class tránh scroll
+                        document.body.classList.remove('modal-open', 'no-scroll', 'overflow-hidden');
+                        document.body.style.overflow = 'auto';
+                    }""")
+                    
+                    self.logger.info("Đã xử lý popup/overlay bằng JavaScript")
+                except Exception as js_e:
+                    self.logger.debug(f"Lỗi khi xử lý popup bằng JavaScript: {str(js_e)}")
+            
+            # Nếu có sử dụng overlay_handler thì gọi
+            if hasattr(self, 'overlay_handler') and self.overlay_handler:
+                try:
+                    self.overlay_handler.close_overlay(close_all=True)
+                except Exception as handler_e:
+                    self.logger.debug(f"Lỗi khi gọi overlay_handler: {str(handler_e)}")
+            
+            return found
+            
+        except Exception as e:
+            self.logger.warning(f"Lỗi khi xử lý popup/overlay: {str(e)}")
+            return False
+
+    @lru_cache(maxsize=128)
+    def find_element_by_description(self, description):
+        """
+        Tìm selector dựa trên mô tả bằng AI hoặc heuristic, có cache LRU
+        """
+        # Ưu tiên AI finder nếu có
+        if self.use_ai_fallback and self.ai_element_finder:
+            selector = self.ai_element_finder.find_element_by_description(description)
+            if selector:
+                return selector
+        # Fallback: thử tìm bằng element_inspector nếu có
+        if self.element_inspector:
+            selector = self.element_inspector.find_element_by_text(description)
+            if selector:
+                return selector
+        # Fallback cuối cùng: None
+        return None

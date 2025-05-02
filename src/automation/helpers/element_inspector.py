@@ -31,7 +31,7 @@ class ElementInspector:
         """
         # Cấu hình logging
         try:
-            from utils.logging_utils import get_logger
+            from src.utils.logging_utils import get_logger
             self.logger = get_logger("ElementInspector")
         except ImportError:
             self.logger = logging.getLogger("ElementInspector")

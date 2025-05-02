@@ -9,7 +9,7 @@
                 </div>
                 <div class="stat-info">
                     <h3>Lệnh Đã Chạy</h3>
-                    <p class="stat-value">125</p>
+                    <p class="stat-value" id="command-count">0</p>
                 </div>
             </div>
 
@@ -33,13 +33,13 @@
                 </div>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card" id="browser-status-card">
                 <div class="stat-icon">
-                    <i class="fas fa-user-friends"></i>
+                    <i class="fas fa-globe"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>Người Dùng</h3>
-                    <p class="stat-value">8</p>
+                    <h3>Trình Duyệt</h3>
+                    <p class="stat-value" id="browser-status">Đang kiểm tra...</p>
                 </div>
             </div>
         </div>
@@ -53,13 +53,21 @@
                     <i class="fas fa-code"></i>
                     <h2>Nhập Lệnh Mới</h2>
                 </div>
-                <button class="help-btn" title="Trợ giúp">
-                    <i class="fas fa-question-circle"></i>
-                </button>
+                <div class="browser-actions">
+                    <button id="btn-start-browser" class="btn btn-primary" title="Khởi động trình duyệt mới">
+                        <i class="fas fa-plus-circle"></i> Khởi động trình duyệt
+                    </button>
+                    <button id="btn-use-existing" class="btn btn-success" title="Sử dụng trình duyệt hiện có" style="display: none;">
+                        <i class="fas fa-sync"></i> Sử dụng trình duyệt hiện có
+                    </button>
+                    <button id="btn-stop-browser" class="btn btn-danger" title="Dừng trình duyệt" style="display: none;">
+                        <i class="fas fa-stop-circle"></i> Dừng trình duyệt
+                    </button>
+                </div>
             </div>
 
             <div class="card-body">
-                <form method="post" class="command-form">
+                <form id="command-form" class="command-form">
                     <div class="form-group">
                         <label for="command">Lệnh:</label>
                         <textarea id="command" name="command" rows="3" placeholder="Nhập lệnh của bạn ở đây..."></textarea>
@@ -84,7 +92,7 @@
                         <button type="reset" class="btn btn-secondary">
                             <i class="fas fa-redo"></i> Đặt lại
                         </button>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" id="btn-run-command" class="btn btn-primary" disabled>
                             <i class="fas fa-play"></i> Thực thi
                         </button>
                     </div>
@@ -100,28 +108,32 @@
                         <h2>Kết Quả Mới Nhất</h2>
                     </div>
                     <div class="card-actions">
-                        <button class="btn-icon" title="Sao chép">
+                        <button class="btn-icon" id="btn-copy-output" title="Sao chép">
                             <i class="fas fa-copy"></i>
                         </button>
-                        <button class="btn-icon" title="Tải xuống">
-                            <i class="fas fa-download"></i>
+                        <button class="btn-icon" id="btn-screenshot" title="Chụp màn hình">
+                            <i class="fas fa-camera"></i>
                         </button>
-                        <button class="btn-icon" title="Chia sẻ">
-                            <i class="fas fa-share-alt"></i>
+                        <button class="btn-icon" id="btn-clear-output" title="Xóa">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
 
                 <div class="card-body">
                     <div class="output-content">
-                        <div class="output-placeholder">
+                        <div id="output-placeholder" class="output-placeholder">
                             <i class="fas fa-terminal placeholder-icon"></i>
                             <p>Kết quả sẽ hiển thị ở đây sau khi chạy lệnh</p>
                         </div>
 
-                        <!-- Output will appear here when available -->
-                        <div class="output-result" style="display: none;">
+                        <div id="output-result" class="output-result" style="display: none;">
                             <pre id="result-content"></pre>
+                        </div>
+
+                        <div id="processing-indicator" style="display: none; text-align: center;">
+                            <div class="spinner"></div>
+                            <p>Đang xử lý lệnh...</p>
                         </div>
                     </div>
                 </div>
@@ -137,70 +149,593 @@
                     <i class="fas fa-history"></i>
                     <h2>Lệnh Gần Đây</h2>
                 </div>
-                <a href="#history" class="view-all">
-                    Xem tất cả <i class="fas fa-arrow-right"></i>
-                </a>
+                <button id="btn-clear-history" class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash"></i> Xóa lịch sử
+                </button>
             </div>
 
             <div class="card-body">
-                <div class="history-list">
-                    <!-- List items will be dynamically populated -->
-                    <div class="history-item">
-                        <div class="history-icon success">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <div class="history-details">
-                            <div class="history-command">python analyze_data.py --input data.csv --output results.json</div>
-                            <div class="history-meta">
-                                <span class="history-time"><i class="far fa-clock"></i> 2 giờ trước</span>
-                                <span class="history-duration"><i class="fas fa-stopwatch"></i> 1.5s</span>
-                            </div>
-                        </div>
-                        <div class="history-actions">
-                            <button class="btn-icon" title="Chạy lại">
-                                <i class="fas fa-redo"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="history-item">
-                        <div class="history-icon error">
-                            <i class="fas fa-times"></i>
-                        </div>
-                        <div class="history-details">
-                            <div class="history-command">npm install -g webpack</div>
-                            <div class="history-meta">
-                                <span class="history-time"><i class="far fa-clock"></i> 3 giờ trước</span>
-                                <span class="history-duration"><i class="fas fa-stopwatch"></i> 3.2s</span>
-                            </div>
-                        </div>
-                        <div class="history-actions">
-                            <button class="btn-icon" title="Chạy lại">
-                                <i class="fas fa-redo"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="history-item">
-                        <div class="history-icon success">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <div class="history-details">
-                            <div class="history-command">git pull origin main</div>
-                            <div class="history-meta">
-                                <span class="history-time"><i class="far fa-clock"></i> 5 giờ trước</span>
-                                <span class="history-duration"><i class="fas fa-stopwatch"></i> 0.8s</span>
-                            </div>
-                        </div>
-                        <div class="history-actions">
-                            <button class="btn-icon" title="Chạy lại">
-                                <i class="fas fa-redo"></i>
-                            </button>
-                        </div>
-                    </div>
+                <div id="history-list" class="history-list">
+                    <!-- Lịch sử lệnh sẽ được thêm vào đây -->
                 </div>
             </div>
         </div>
     </section>
 </div>
+
+<style>
+    /* Thêm CSS cho spinner và trạng thái trình duyệt */
+    
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #09f;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+    }
+    
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+    
+    .browser-status-active {
+        color: green;
+    }
+    
+    .browser-status-inactive {
+        color: red;
+    }
+    
+    .browser-actions {
+        display: flex;
+        gap: 10px;
+    }
+    /* Thêm style cho kết quả lệnh */
+    
+    #result-content {
+        max-height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+</style>
+
+<script>
+    // Khởi tạo biến trạng thái
+    let isBrowserRunning = false;
+    let isCommandRunning = false;
+    let commandHistory = [];
+    let statusCheckInterval = null;
+
+    // Hàm khởi tạo khi trang được load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lấy reference đến các element
+        const btnStartBrowser = document.getElementById('btn-start-browser');
+        const btnUseExisting = document.getElementById('btn-use-existing');
+        const btnStopBrowser = document.getElementById('btn-stop-browser');
+        const btnRunCommand = document.getElementById('btn-run-command');
+        const commandForm = document.getElementById('command-form');
+        const commandInput = document.getElementById('command');
+        const outputPlaceholder = document.getElementById('output-placeholder');
+        const outputResult = document.getElementById('output-result');
+        const resultContent = document.getElementById('result-content');
+        const processingIndicator = document.getElementById('processing-indicator');
+        const historyList = document.getElementById('history-list');
+        const btnCopyOutput = document.getElementById('btn-copy-output');
+        const btnScreenshot = document.getElementById('btn-screenshot');
+        const btnClearOutput = document.getElementById('btn-clear-output');
+        const btnClearHistory = document.getElementById('btn-clear-history');
+
+        // Kiểm tra trạng thái trình duyệt khi trang được load
+        checkBrowserStatus();
+
+        // Khởi tạo kiểm tra trạng thái định kỳ (mỗi 10 giây)
+        statusCheckInterval = setInterval(checkBrowserStatus, 10000);
+
+        // Lấy lịch sử lệnh khi trang được load
+        fetchCommandHistory();
+
+        // Event handlers
+
+        // Khởi động trình duyệt mới
+        btnStartBrowser.addEventListener('click', function() {
+            startBrowser();
+        });
+
+        // Sử dụng trình duyệt hiện có
+        btnUseExisting.addEventListener('click', function() {
+            useExistingBrowser();
+        });
+
+        // Dừng trình duyệt
+        btnStopBrowser.addEventListener('click', function() {
+            stopBrowser();
+        });
+
+        // Xử lý submit form lệnh
+        commandForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const command = commandInput.value.trim();
+            if (command) {
+                runCommand(command);
+            }
+        });
+
+        // Sao chép kết quả
+        btnCopyOutput.addEventListener('click', function() {
+            const text = resultContent.textContent;
+            if (text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('Đã sao chép kết quả vào clipboard');
+                });
+            }
+        });
+
+        // Chụp màn hình
+        btnScreenshot.addEventListener('click', function() {
+            takeScreenshot();
+        });
+
+        // Xóa kết quả
+        btnClearOutput.addEventListener('click', function() {
+            clearOutput();
+        });
+
+        // Xóa lịch sử
+        btnClearHistory.addEventListener('click', function() {
+            clearCommandHistory();
+        });
+    });
+
+    // Hàm kiểm tra trạng thái trình duyệt
+    function checkBrowserStatus() {
+        fetch('/api/command-status')
+            .then(response => response.json())
+            .then(data => {
+                isBrowserRunning = data.is_browser_running;
+                updateBrowserStatusUI(isBrowserRunning);
+
+                // Nếu có tiến trình đang chạy, cập nhật kết quả
+                if (data.status === 'running' && isCommandRunning) {
+                    updateOutputWithResults(data.output);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi kiểm tra trạng thái:', error);
+                updateBrowserStatusUI(false);
+            });
+
+        // Kiểm tra xem có trình duyệt hiện tại không
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.has_current_browser) {
+                    document.getElementById('btn-use-existing').style.display = 'inline-block';
+                } else {
+                    document.getElementById('btn-use-existing').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi kiểm tra trình duyệt hiện tại:', error);
+            });
+    }
+
+    // Cập nhật UI theo trạng thái trình duyệt
+    function updateBrowserStatusUI(isRunning) {
+        const browserStatus = document.getElementById('browser-status');
+        const btnRunCommand = document.getElementById('btn-run-command');
+        const btnStartBrowser = document.getElementById('btn-start-browser');
+        const btnStopBrowser = document.getElementById('btn-stop-browser');
+
+        if (isRunning) {
+            browserStatus.textContent = 'Đang chạy';
+            browserStatus.className = 'stat-value browser-status-active';
+            btnRunCommand.disabled = false;
+            btnStartBrowser.style.display = 'none';
+            btnStopBrowser.style.display = 'inline-block';
+        } else {
+            browserStatus.textContent = 'Không chạy';
+            browserStatus.className = 'stat-value browser-status-inactive';
+            btnRunCommand.disabled = true;
+            btnStartBrowser.style.display = 'inline-block';
+            btnStopBrowser.style.display = 'none';
+        }
+    }
+
+    // Khởi động trình duyệt mới
+    function startBrowser() {
+        showNotification('Đang khởi động trình duyệt mới...');
+
+        fetch('/api/start-browser', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    browser_type: 'chromium'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Trình duyệt đã được khởi động thành công');
+                    isBrowserRunning = true;
+                    updateBrowserStatusUI(true);
+                } else {
+                    showNotification('Không thể khởi động trình duyệt: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Lỗi khi khởi động trình duyệt: ' + error.message, 'error');
+            });
+    }
+
+    // Sử dụng trình duyệt hiện có
+    function useExistingBrowser() {
+        showNotification('Đang kết nối với trình duyệt hiện có...');
+
+        fetch('/api/start-browser', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    browser_type: 'chromium',
+                    use_existing: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Đã kết nối với trình duyệt hiện có thành công');
+                    isBrowserRunning = true;
+                    updateBrowserStatusUI(true);
+                } else {
+                    showNotification('Không thể kết nối trình duyệt: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Lỗi khi kết nối trình duyệt: ' + error.message, 'error');
+            });
+    }
+
+    // Dừng trình duyệt
+    function stopBrowser() {
+        if (!confirm('Bạn có chắc muốn dừng trình duyệt không?')) {
+            return;
+        }
+
+        fetch('/api/stop-browser', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Trình duyệt đã được dừng thành công');
+                    isBrowserRunning = false;
+                    updateBrowserStatusUI(false);
+                } else {
+                    showNotification('Không thể dừng trình duyệt: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Lỗi khi dừng trình duyệt: ' + error.message, 'error');
+            });
+    }
+
+    // Chạy lệnh
+    function runCommand(command) {
+        if (!isBrowserRunning) {
+            showNotification('Trình duyệt chưa được khởi động', 'error');
+            return;
+        }
+
+        if (isCommandRunning) {
+            showNotification('Đang xử lý lệnh khác, vui lòng đợi', 'warning');
+            return;
+        }
+
+        isCommandRunning = true;
+        showProcessingIndicator(true);
+
+        // Gửi lệnh đến API
+        fetch('/api/run-command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    command: command
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Lệnh đã được gửi thành công, đang xử lý...');
+
+                    // Thêm vào lịch sử
+                    if (document.getElementById('save_history').checked) {
+                        addCommandToHistory(command);
+                    }
+
+                    // Bắt đầu kiểm tra trạng thái lệnh
+                    pollCommandStatus();
+                } else {
+                    showNotification('Lỗi khi thực thi lệnh: ' + data.message, 'error');
+                    isCommandRunning = false;
+                    showProcessingIndicator(false);
+                }
+            })
+            .catch(error => {
+                showNotification('Lỗi khi gửi lệnh: ' + error.message, 'error');
+                isCommandRunning = false;
+                showProcessingIndicator(false);
+            });
+    }
+
+    // Kiểm tra trạng thái lệnh liên tục
+    function pollCommandStatus() {
+        let pollingInterval = setInterval(() => {
+            fetch('/api/command-status')
+                .then(response => response.json())
+                .then(data => {
+                    // Cập nhật kết quả với output mới nhất
+                    updateOutputWithResults(data.output);
+
+                    // Nếu lệnh đã hoàn thành hoặc lỗi, dừng polling
+                    if (data.status !== 'running') {
+                        clearInterval(pollingInterval);
+                        isCommandRunning = false;
+                        showProcessingIndicator(false);
+
+                        if (data.status === 'error') {
+                            showNotification('Lệnh thực thi không thành công', 'error');
+                        } else {
+                            showNotification('Lệnh đã thực thi thành công');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi kiểm tra trạng thái lệnh:', error);
+                    clearInterval(pollingInterval);
+                    isCommandRunning = false;
+                    showProcessingIndicator(false);
+                });
+        }, 1000); // Poll mỗi giây
+    }
+
+    // Cập nhật output với kết quả mới
+    function updateOutputWithResults(output) {
+        if (!output || output.length === 0) return;
+
+        const outputPlaceholder = document.getElementById('output-placeholder');
+        const outputResult = document.getElementById('output-result');
+        const resultContent = document.getElementById('result-content');
+
+        outputPlaceholder.style.display = 'none';
+        outputResult.style.display = 'block';
+
+        // Nối các dòng output thành text
+        const text = output.join('\n');
+        resultContent.textContent = text;
+
+        // Cuộn xuống để xem kết quả mới nhất
+        resultContent.scrollTop = resultContent.scrollHeight;
+    }
+
+    // Hiển thị/ẩn chỉ báo đang xử lý
+    function showProcessingIndicator(show) {
+        const processingIndicator = document.getElementById('processing-indicator');
+
+        if (show) {
+            processingIndicator.style.display = 'block';
+        } else {
+            processingIndicator.style.display = 'none';
+        }
+    }
+
+    // Lấy lịch sử lệnh
+    function fetchCommandHistory() {
+        fetch('/api/command-history')
+            .then(response => response.json())
+            .then(data => {
+                commandHistory = data.history || [];
+                updateCommandHistoryUI();
+
+                // Cập nhật số lệnh đã chạy
+                document.getElementById('command-count').textContent = commandHistory.length;
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy lịch sử lệnh:', error);
+            });
+    }
+
+    // Thêm lệnh vào lịch sử
+    function addCommandToHistory(command) {
+        // Thêm vào đầu mảng để hiển thị lệnh mới nhất trước
+        commandHistory.unshift(command);
+
+        // Giới hạn lịch sử chỉ lưu 20 lệnh gần nhất
+        if (commandHistory.length > 20) {
+            commandHistory = commandHistory.slice(0, 20);
+        }
+
+        // Cập nhật UI
+        updateCommandHistoryUI();
+
+        // Cập nhật số lệnh đã chạy
+        document.getElementById('command-count').textContent = commandHistory.length;
+    }
+
+    // Cập nhật UI lịch sử lệnh
+    function updateCommandHistoryUI() {
+        const historyList = document.getElementById('history-list');
+        historyList.innerHTML = ''; // Xóa danh sách hiện tại
+
+        commandHistory.forEach((command, index) => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+
+            const historyIcon = document.createElement('div');
+            historyIcon.className = 'history-icon success';
+            historyIcon.innerHTML = '<i class="fas fa-check"></i>';
+
+            const historyDetails = document.createElement('div');
+            historyDetails.className = 'history-details';
+
+            const historyCommand = document.createElement('div');
+            historyCommand.className = 'history-command';
+            historyCommand.textContent = command;
+
+            const historyMeta = document.createElement('div');
+            historyMeta.className = 'history-meta';
+
+            // Thời gian giả định
+            const time = index === 0 ? 'Vừa xong' : `${index * 5 + 2} phút trước`;
+            historyMeta.innerHTML = `<span class="history-time"><i class="far fa-clock"></i> ${time}</span>`;
+
+            const historyActions = document.createElement('div');
+            historyActions.className = 'history-actions';
+
+            const rerunButton = document.createElement('button');
+            rerunButton.className = 'btn-icon';
+            rerunButton.title = 'Chạy lại';
+            rerunButton.innerHTML = '<i class="fas fa-redo"></i>';
+            rerunButton.addEventListener('click', function() {
+                document.getElementById('command').value = command;
+                runCommand(command);
+            });
+
+            // Kết hợp tất cả
+            historyDetails.appendChild(historyCommand);
+            historyDetails.appendChild(historyMeta);
+
+            historyActions.appendChild(rerunButton);
+
+            historyItem.appendChild(historyIcon);
+            historyItem.appendChild(historyDetails);
+            historyItem.appendChild(historyActions);
+
+            historyList.appendChild(historyItem);
+        });
+
+        // Hiển thị thông báo nếu không có lịch sử
+        if (commandHistory.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'history-empty';
+            emptyMessage.textContent = 'Chưa có lệnh nào trong lịch sử';
+            historyList.appendChild(emptyMessage);
+        }
+    }
+
+    // Xóa lịch sử lệnh
+    function clearCommandHistory() {
+        if (confirm('Bạn có chắc muốn xóa tất cả lịch sử lệnh không?')) {
+            commandHistory = [];
+            updateCommandHistoryUI();
+            document.getElementById('command-count').textContent = '0';
+            showNotification('Đã xóa lịch sử lệnh');
+        }
+    }
+
+    // Chụp màn hình
+    function takeScreenshot() {
+        if (!isBrowserRunning) {
+            showNotification('Trình duyệt chưa được khởi động', 'error');
+            return;
+        }
+
+        fetch('/api/take-screenshot', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Đã chụp màn hình thành công: ' + data.path);
+                } else {
+                    showNotification('Không thể chụp màn hình: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Lỗi khi chụp màn hình: ' + error.message, 'error');
+            });
+    }
+
+    // Xóa kết quả
+    function clearOutput() {
+        const outputPlaceholder = document.getElementById('output-placeholder');
+        const outputResult = document.getElementById('output-result');
+        const resultContent = document.getElementById('result-content');
+
+        outputPlaceholder.style.display = 'block';
+        outputResult.style.display = 'none';
+        resultContent.textContent = '';
+    }
+
+    // Hiển thị thông báo
+    function showNotification(message, type = 'success') {
+        // Tạo phần tử thông báo
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+
+        // Thêm vào body
+        document.body.appendChild(notification);
+
+        // Hiệu ứng fade in
+        setTimeout(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateY(0)';
+        }, 10);
+
+        // Tự động xóa sau 3 giây
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-20px)';
+
+            // Xóa khỏi DOM sau khi kết thúc hiệu ứng
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    // Thêm CSS cho thông báo
+    const notificationStyle = document.createElement('style');
+    notificationStyle.textContent = `
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background-color: #4caf50;
+        color: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        z-index: 9999;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: opacity 0.3s, transform 0.3s;
+    }
+    
+    .notification.error {
+        background-color: #f44336;
+    }
+    
+    .notification.warning {
+        background-color: #ff9800;
+    }
+`;
+    document.head.appendChild(notificationStyle);
+</script>
 {% endblock %}

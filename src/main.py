@@ -27,16 +27,14 @@ if sys.stdout.encoding != 'utf-8':
         # For older Python versions
         pass
 
-from automation import BrowserController, WorkflowManager
-from ai.agent import AIAgent
-from utils import UserInteraction
+from src.automation import BrowserController, WorkflowManager
+from src.ai.agent import AIAgent
+from src.utils import UserInteraction
+from src.utils.logging_utils import configure_unicode_logging
+from src.utils.logging_utils import get_logger
 
 # Load environment variables
 load_dotenv()
-
-# Sử dụng tiện ích logging với hỗ trợ Unicode
-from utils.logging_utils import configure_unicode_logging
-configure_unicode_logging("browser_automation.log", logging.INFO)
 
 class BrowserAutomationAgent:
     """
@@ -56,7 +54,6 @@ class BrowserAutomationAgent:
             browser_controller (BrowserController, optional): Instance BrowserController có sẵn để sử dụng
         """
         # Sử dụng get_logger để đảm bảo xử lý Unicode đúng
-        from utils.logging_utils import get_logger
         self.logger = get_logger("BrowserAutomationAgent")
         
         # Các cấu hình cho thao tác giống người thật
@@ -320,7 +317,7 @@ class BrowserAutomationAgent:
         """Đóng trình duyệt và dọn dẹp tài nguyên"""
         try:
             # Chỉ đóng browser nếu không phải instance được truyền từ bên ngoài
-            from automation.browser_controller import BrowserController
+            from src.automation.browser_controller import BrowserController
             current_instance = BrowserController.get_current_instance()
             
             # Nếu không phải instance hiện tại, có thể đóng an toàn

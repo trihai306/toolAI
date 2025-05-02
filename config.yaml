@@ -1,0 +1,18 @@
+# Cấu hình động cho BrowserController
+screenshots_dir: "../data"
+use_ai_fallback: true
+browser_type: "chromium"
+use_stealth: true
+debug: false
+enable_auto_popup_handler: true
+enable_cursor_icon: true
+cursor_icon_url: null
+cursor_move_delay: 0.2
+enable_highlight: true
+human_like_mode: true
+human_profile:
+  reading_speed: 200
+  cursor_accuracy: 0.95
+  typing_speed: 10
+  age_group: "25-34"
+  tech_savvy: 0.9 
