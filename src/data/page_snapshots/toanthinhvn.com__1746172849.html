@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="content-language" content="">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache">
+<meta name="keywords" content="Hệ thống quản trị phần mềm TTSOFT">
+<meta name="description" content="Hệ thống quản trị phần mềm TTSOFT">
+<meta name="author" content="Công ty TNHH Toàn Thịnh">
+<meta name="robots" content="noindex, nofollow">
+<title>Tuân thủ nội quy, làm việc theo đúng văn bản, tài liệu (QĐ, QT) đã ban hành</title>
+<link href="https://toanthinhvn.com/public/icon/favicon.ico" rel="shortcut icon" type="image/ico">
+<link href="https://toanthinhvn.com/public/css/jquery-ui/jquery-ui.min.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="https://toanthinhvn.com/public/css/font-awesome.min.css">
+<link href="https://toanthinhvn.com/public/toastr/css/toastr.min.css" rel="stylesheet" type="text/css">
+<script src="https://toanthinhvn.com/public/js/jquery.min.js" type="text/javascript"></script>
+<script src="https://toanthinhvn.com/public/js/jquery-ui.min.js" type="text/javascript"></script>
+<script src="https://toanthinhvn.com/public/js/comon.js?v=416835" type="text/javascript"></script>
+<link href="https://toanthinhvn.com/public/css/admin.css?v=89721" rel="stylesheet" type="text/css">
+<script src="https://toanthinhvn.com/public/js/adminMenu.js" type="text/javascript"></script>
+<script src="https://toanthinhvn.com/public/js/checkbutton.js?v=203467" type="text/javascript"></script>
+<script src="https://toanthinhvn.com/public/js/jquery.floatThead.min.js" type="text/javascript"></script>
+<script src="https://toanthinhvn.com/public/toastr/js/toastr.min.js" type="text/javascript"></script>
+<link href="https://toanthinhvn.com/public/sweetalert2/css/sweetalert2.min.css" rel="stylesheet" type="text/css">
+<script src="https://toanthinhvn.com/public/sweetalert2/js/sweetalert2.min.js" type="text/javascript"></script>
+<script src="https://toanthinhvn.com/public/js/socket.io.js"></script>
+<link href="https://toanthinhvn.com/public/css/show-more.min.css" rel="stylesheet" type="text/css">
+<script src="https://toanthinhvn.com/public/js/showMore.min.js" type="text/javascript"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<style>
+            .human-like-cursor {
+                position: fixed;
+                width: 24px;
+                height: 24px;
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7,2l12,11.2l-5.8,0.5l3.3,7.3l-2.2,1l-3.2-7.4L7,18.5V2" stroke="%23000" stroke-width="1.5" fill="%23fff" /></svg>');
+                background-repeat: no-repeat;
+                background-size: contain;
+                pointer-events: none;
+                z-index: 999999;
+                transition: transform 0.05s linear;
+                transform-origin: top left;
+                opacity: 0.9;
+            }
+            .human-like-cursor.clicking {
+                transform: scale(0.9);
+                opacity: 1;
+            }
+            </style></head>
+<body style="">
+
+    
+<div id="content-wrapper">    <div id="header-content"></div>    <div id="center-content"><script src="https://toanthinhvn.com/public/js/gla.js?v=875634" type="text/javascript"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        const localIP = '1';
+        localStorage.setItem('local_ip', localIP);
+        localStorage.setItem('time_expire', 25);
+        getLocation(localIP);
+    });
+</script>
+<section class="container">
+    <div class="login">
+        <h1>Đăng nhập</h1>
+        <form name="frmLogin" id="frmLogin" action="" method="post">
+            <input name="cmd" type="hidden" id="cmd" value="run">
+                        <p><input type="text" name="username" id="username" placeholder="Tên đăng nhập hoăc Email"></p>
+            <p><input type="password" name="password" id="password" placeholder="Mật khẩu"></p>
+                        <p class="remember_me">
+                <label>
+                    <input type="checkbox" name="remember_me" id="remember_me">
+                    Ghi nhớ đăng nhập
+                </label>
+            </p>
+            <p id="pos"><input name="ip_addr" type="hidden" id="ip_addr" value="localhost"><input name="local_ip" type="hidden" id="local_ip" value="1"><input name="city" type="hidden" id="city" value="Bắc Ninh"><input name="region" type="hidden" id="region" value="Bắc Ninh Province"><input name="country" type="hidden" id="country" value="VN"><input name="location" type="hidden" id="post" value="21.1858, 106.0746"><input name="loc" type="hidden" id="loc" value="21.1858, 106.0746"></p>
+            <p class="submit"><input type="submit" name="btnLogin" id="btnLogin" value="Đăng nhập"></p>
+        </form>
+    </div>
+
+    <div class="login-help">
+        <p>Quên mật khẩu? <a href="https://toanthinhvn.com/passwordreset.html">Khôi phục lại mật khẩu</a></p>
+    </div>
+</section>
+</div>    <div id="footer-content"></div></div>
+<div id="preview-dialog" title="File Preview"></div><div id="human-like-cursor" class="human-like-cursor" style="display: block;"></div></body></html>

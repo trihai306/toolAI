@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ToolAI{% endblock %}</title>
+
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> {% block extra_css %}{% endblock %}
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="logo">
+                    <i class="fas fa-robot"></i> ToolAI
+                </h2>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav space-y-2 px-4 py-4">
+                <ul class="flex flex-col space-y-2">
+                    <li>
+                        <a href="/" class="flex items-center space-x-3 px-4 py-2 text-white/70 hover:bg-white/10 hover:text-white rounded-lg transition-all duration-300 group">
+                            <i class="fas fa-home text-xl text-cyan-400 group-hover:text-cyan-300 transition-colors"></i>
+                            <span class="font-medium text-sm">Trang chủ</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#history" class="flex items-center space-x-3 px-4 py-2 text-white/70 hover:bg-white/10 hover:text-white rounded-lg transition-all duration-300 group">
+                            <i class="fas fa-history text-xl text-cyan-400 group-hover:text-cyan-300 transition-colors"></i>
+                            <span class="font-medium text-sm">Lịch sử</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#config" class="flex items-center space-x-3 px-4 py-2 text-white/70 hover:bg-white/10 hover:text-white rounded-lg transition-all duration-300 group">
+                            <i class="fas fa-cog text-xl text-cyan-400 group-hover:text-cyan-300 transition-colors"></i>
+                            <span class="font-medium text-sm">Cấu hình</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#analytics" class="flex items-center space-x-3 px-4 py-2 text-white/70 hover:bg-white/10 hover:text-white rounded-lg transition-all duration-300 group">
+                            <i class="fas fa-chart-pie text-xl text-cyan-400 group-hover:text-cyan-300 transition-colors"></i>
+                            <span class="font-medium text-sm">Thống kê</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#settings" class="flex items-center space-x-3 px-4 py-2 text-white/70 hover:bg-white/10 hover:text-white rounded-lg transition-all duration-300 group">
+                            <i class="fas fa-sliders-h text-xl text-cyan-400 group-hover:text-cyan-300 transition-colors"></i>
+                            <span class="font-medium text-sm">Tùy chỉnh</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <p>Phiên bản 1.0</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <input type="text" placeholder="Tìm kiếm...">
+                        <button><i class="fas fa-search"></i></button>
+                    </div>
+                    <div class="user-profile">
+                        <img src="{{ url_for('static', filename='img/avatar.png') }}" alt="Avatar" class="avatar">
+                        <div class="user-info">
+                            <span class="user-name">Admin</span>
+                            <span class="user-role">Quản trị viên</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Main JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <script>
+        // Toggle sidebar on mobile
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.querySelector('.app-container').classList.toggle('sidebar-collapsed');
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

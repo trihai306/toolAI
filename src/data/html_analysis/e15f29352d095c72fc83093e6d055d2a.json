@@ -1,0 +1,800 @@
+{
+  "url": "https://toanthinhvn.com/",
+  "timestamp": 1746176564.279028,
+  "element_map": {
+    "#content-wrapper": {
+      "type": "div",
+      "text": "Đăng nhậpTên đăng nhập hoặc mật khẩu không đúngGhi nhớ đăng nhậpQuên mật khẩu?Khôi phục lại mật khẩu",
+      "attributes": {
+        "id": "content-wrapper"
+      },
+      "selector": "#content-wrapper",
+      "source": "id"
+    },
+    "#header-content": {
+      "type": "div",
+      "text": "",
+      "attributes": {
+        "id": "header-content"
+      },
+      "selector": "#header-content",
+      "source": "id"
+    },
+    "#center-content": {
+      "type": "div",
+      "text": "Đăng nhậpTên đăng nhập hoặc mật khẩu không đúngGhi nhớ đăng nhậpQuên mật khẩu?Khôi phục lại mật khẩu",
+      "attributes": {
+        "id": "center-content"
+      },
+      "selector": "#center-content",
+      "source": "id"
+    },
+    "#frmLogin": {
+      "type": "form",
+      "text": "Tên đăng nhập hoặc mật khẩu không đúngGhi nhớ đăng nhập",
+      "attributes": {
+        "name": "frmLogin",
+        "id": "frmLogin",
+        "action": "",
+        "method": "post"
+      },
+      "selector": "#frmLogin",
+      "source": "id"
+    },
+    "#cmd": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "cmd",
+        "type": "hidden",
+        "id": "cmd",
+        "value": "run"
+      },
+      "selector": "#cmd",
+      "source": "id"
+    },
+    "#username": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "text",
+        "name": "username",
+        "id": "username",
+        "placeholder": "Tên đăng nhập hoăc Email"
+      },
+      "selector": "#username",
+      "source": "id"
+    },
+    "#password": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "password",
+        "name": "password",
+        "id": "password",
+        "placeholder": "Mật khẩu"
+      },
+      "selector": "#password",
+      "source": "id"
+    },
+    "#img_code": {
+      "type": "img",
+      "text": "",
+      "attributes": {
+        "src": "https://toanthinhvn.com/image/upload/captcha/ac1bc2_60_20.gif",
+        "alt": "Mã xác nhận",
+        "id": "img_code",
+        "style": "margin: 12px 5px; float: left;"
+      },
+      "selector": "#img_code",
+      "source": "id"
+    },
+    "#refresh_code": {
+      "type": "img",
+      "text": "",
+      "attributes": {
+        "src": "https://toanthinhvn.com/public/images/arrows_static.gif",
+        "id": "refresh_code",
+        "alt": "Lấy mã xác nhận mới",
+        "title": "Lấy mã xác nhận mới",
+        "onclick": "reloadCaptcha();",
+        "style": "margin: 12px 5px; float: left;"
+      },
+      "selector": "#refresh_code",
+      "source": "id"
+    },
+    "#captcha": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "text",
+        "name": "captcha",
+        "id": "captcha",
+        "placeholder": "Mã xác nhận",
+        "style": "width: 104px;"
+      },
+      "selector": "#captcha",
+      "source": "id"
+    },
+    "#remember_me": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "checkbox",
+        "name": "remember_me",
+        "id": "remember_me"
+      },
+      "selector": "#remember_me",
+      "source": "id"
+    },
+    "#pos": {
+      "type": "p",
+      "text": "",
+      "attributes": {
+        "id": "pos"
+      },
+      "selector": "#pos",
+      "source": "id"
+    },
+    "#ip_addr": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "ip_addr",
+        "type": "hidden",
+        "id": "ip_addr",
+        "value": "localhost"
+      },
+      "selector": "#ip_addr",
+      "source": "id"
+    },
+    "#local_ip": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "local_ip",
+        "type": "hidden",
+        "id": "local_ip",
+        "value": "1"
+      },
+      "selector": "#local_ip",
+      "source": "id"
+    },
+    "#city": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "city",
+        "type": "hidden",
+        "id": "city",
+        "value": "Bắc Ninh"
+      },
+      "selector": "#city",
+      "source": "id"
+    },
+    "#region": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "region",
+        "type": "hidden",
+        "id": "region",
+        "value": "Bắc Ninh Province"
+      },
+      "selector": "#region",
+      "source": "id"
+    },
+    "#country": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "country",
+        "type": "hidden",
+        "id": "country",
+        "value": "VN"
+      },
+      "selector": "#country",
+      "source": "id"
+    },
+    "#post": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "location",
+        "type": "hidden",
+        "id": "post",
+        "value": "21.1858, 106.0746"
+      },
+      "selector": "#post",
+      "source": "id"
+    },
+    "#loc": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "loc",
+        "type": "hidden",
+        "id": "loc",
+        "value": "21.1858, 106.0746"
+      },
+      "selector": "#loc",
+      "source": "id"
+    },
+    "#btnLogin": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "submit",
+        "name": "btnLogin",
+        "id": "btnLogin",
+        "value": "Đăng nhập"
+      },
+      "selector": "#btnLogin",
+      "source": "id"
+    },
+    "#footer-content": {
+      "type": "div",
+      "text": "",
+      "attributes": {
+        "id": "footer-content"
+      },
+      "selector": "#footer-content",
+      "source": "id"
+    },
+    "#preview-dialog": {
+      "type": "div",
+      "text": "",
+      "attributes": {
+        "id": "preview-dialog",
+        "title": "File Preview"
+      },
+      "selector": "#preview-dialog",
+      "source": "id"
+    },
+    "form[name='frmLogin']": {
+      "type": "form",
+      "text": "Tên đăng nhập hoặc mật khẩu không đúngGhi nhớ đăng nhập",
+      "attributes": {
+        "name": "frmLogin",
+        "id": "frmLogin",
+        "action": "",
+        "method": "post"
+      },
+      "selector": "form[name='frmLogin']",
+      "source": "name"
+    },
+    "input[name='cmd']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "cmd",
+        "type": "hidden",
+        "id": "cmd",
+        "value": "run"
+      },
+      "selector": "input[name='cmd']",
+      "source": "name"
+    },
+    "input[name='username']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "text",
+        "name": "username",
+        "id": "username",
+        "placeholder": "Tên đăng nhập hoăc Email"
+      },
+      "selector": "input[name='username']",
+      "source": "name"
+    },
+    "input[name='password']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "password",
+        "name": "password",
+        "id": "password",
+        "placeholder": "Mật khẩu"
+      },
+      "selector": "input[name='password']",
+      "source": "name"
+    },
+    "input[name='captcha']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "text",
+        "name": "captcha",
+        "id": "captcha",
+        "placeholder": "Mã xác nhận",
+        "style": "width: 104px;"
+      },
+      "selector": "input[name='captcha']",
+      "source": "name"
+    },
+    "input[name='remember_me']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "checkbox",
+        "name": "remember_me",
+        "id": "remember_me"
+      },
+      "selector": "input[name='remember_me']",
+      "source": "name"
+    },
+    "input[name='ip_addr']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "ip_addr",
+        "type": "hidden",
+        "id": "ip_addr",
+        "value": "localhost"
+      },
+      "selector": "input[name='ip_addr']",
+      "source": "name"
+    },
+    "input[name='local_ip']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "local_ip",
+        "type": "hidden",
+        "id": "local_ip",
+        "value": "1"
+      },
+      "selector": "input[name='local_ip']",
+      "source": "name"
+    },
+    "input[name='city']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "city",
+        "type": "hidden",
+        "id": "city",
+        "value": "Bắc Ninh"
+      },
+      "selector": "input[name='city']",
+      "source": "name"
+    },
+    "input[name='region']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "region",
+        "type": "hidden",
+        "id": "region",
+        "value": "Bắc Ninh Province"
+      },
+      "selector": "input[name='region']",
+      "source": "name"
+    },
+    "input[name='country']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "country",
+        "type": "hidden",
+        "id": "country",
+        "value": "VN"
+      },
+      "selector": "input[name='country']",
+      "source": "name"
+    },
+    "input[name='location']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "location",
+        "type": "hidden",
+        "id": "post",
+        "value": "21.1858, 106.0746"
+      },
+      "selector": "input[name='location']",
+      "source": "name"
+    },
+    "input[name='loc']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "loc",
+        "type": "hidden",
+        "id": "loc",
+        "value": "21.1858, 106.0746"
+      },
+      "selector": "input[name='loc']",
+      "source": "name"
+    },
+    "input[name='btnLogin']": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "submit",
+        "name": "btnLogin",
+        "id": "btnLogin",
+        "value": "Đăng nhập"
+      },
+      "selector": "input[name='btnLogin']",
+      "source": "name"
+    },
+    "section.container": {
+      "type": "section",
+      "text": "Đăng nhậpTên đăng nhập hoặc mật khẩu không đúngGhi nhớ đăng nhậpQuên mật khẩu?Khôi phục lại mật khẩu",
+      "attributes": {
+        "class": [
+          "container"
+        ]
+      },
+      "selector": "section.container",
+      "source": "class"
+    },
+    "div.login": {
+      "type": "div",
+      "text": "Đăng nhậpTên đăng nhập hoặc mật khẩu không đúngGhi nhớ đăng nhập",
+      "attributes": {
+        "class": [
+          "login"
+        ]
+      },
+      "selector": "div.login",
+      "source": "class"
+    },
+    "div.error-box": {
+      "type": "div",
+      "text": "Tên đăng nhập hoặc mật khẩu không đúng",
+      "attributes": {
+        "class": [
+          "error-box"
+        ]
+      },
+      "selector": "div.error-box",
+      "source": "class"
+    },
+    "p.remember_me": {
+      "type": "p",
+      "text": "Ghi nhớ đăng nhập",
+      "attributes": {
+        "class": [
+          "remember_me"
+        ]
+      },
+      "selector": "p.remember_me",
+      "source": "class"
+    },
+    "p.submit": {
+      "type": "p",
+      "text": "",
+      "attributes": {
+        "class": [
+          "submit"
+        ]
+      },
+      "selector": "p.submit",
+      "source": "class"
+    },
+    "div.login-help": {
+      "type": "div",
+      "text": "Quên mật khẩu?Khôi phục lại mật khẩu",
+      "attributes": {
+        "class": [
+          "login-help"
+        ]
+      },
+      "selector": "div.login-help",
+      "source": "class"
+    },
+    "input:nth-of-type(1)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "cmd",
+        "type": "hidden",
+        "id": "cmd",
+        "value": "run"
+      },
+      "selector": "input:nth-of-type(1)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(2)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "text",
+        "name": "username",
+        "id": "username",
+        "placeholder": "Tên đăng nhập hoăc Email"
+      },
+      "selector": "input:nth-of-type(2)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(3)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "password",
+        "name": "password",
+        "id": "password",
+        "placeholder": "Mật khẩu"
+      },
+      "selector": "input:nth-of-type(3)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(4)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "text",
+        "name": "captcha",
+        "id": "captcha",
+        "placeholder": "Mã xác nhận",
+        "style": "width: 104px;"
+      },
+      "selector": "input:nth-of-type(4)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(5)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "checkbox",
+        "name": "remember_me",
+        "id": "remember_me"
+      },
+      "selector": "input:nth-of-type(5)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(6)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "ip_addr",
+        "type": "hidden",
+        "id": "ip_addr",
+        "value": "localhost"
+      },
+      "selector": "input:nth-of-type(6)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(7)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "local_ip",
+        "type": "hidden",
+        "id": "local_ip",
+        "value": "1"
+      },
+      "selector": "input:nth-of-type(7)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(8)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "city",
+        "type": "hidden",
+        "id": "city",
+        "value": "Bắc Ninh"
+      },
+      "selector": "input:nth-of-type(8)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(9)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "region",
+        "type": "hidden",
+        "id": "region",
+        "value": "Bắc Ninh Province"
+      },
+      "selector": "input:nth-of-type(9)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(10)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "country",
+        "type": "hidden",
+        "id": "country",
+        "value": "VN"
+      },
+      "selector": "input:nth-of-type(10)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(11)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "location",
+        "type": "hidden",
+        "id": "post",
+        "value": "21.1858, 106.0746"
+      },
+      "selector": "input:nth-of-type(11)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(12)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "name": "loc",
+        "type": "hidden",
+        "id": "loc",
+        "value": "21.1858, 106.0746"
+      },
+      "selector": "input:nth-of-type(12)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "input:nth-of-type(13)": {
+      "type": "input",
+      "text": "",
+      "attributes": {
+        "type": "submit",
+        "name": "btnLogin",
+        "id": "btnLogin",
+        "value": "Đăng nhập"
+      },
+      "selector": "input:nth-of-type(13)",
+      "text_selector": null,
+      "source": "position"
+    },
+    "a:nth-of-type(1)": {
+      "type": "a",
+      "text": "Khôi phục lại mật khẩu",
+      "attributes": {
+        "href": "https://toanthinhvn.com/passwordreset.html"
+      },
+      "selector": "a:nth-of-type(1)",
+      "text_selector": "a:contains('Khôi phục lại mật khẩu')",
+      "source": "position"
+    },
+    "h1:contains('Đăng nhập')": {
+      "type": "h1",
+      "text": "Đăng nhập",
+      "attributes": {},
+      "selector": "h1:contains('Đăng nhập')",
+      "source": "heading"
+    },
+    "ai_desc:Input cho tên đăng nhập hoặc email": {
+      "description": "Input cho tên đăng nhập hoặc email",
+      "selector": "#username",
+      "element_type": "input",
+      "common_actions": [
+        "input",
+        "focus"
+      ],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Input cho mật khẩu": {
+      "description": "Input cho mật khẩu",
+      "selector": "#password",
+      "element_type": "input",
+      "common_actions": [
+        "input",
+        "focus"
+      ],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Checkbox nhớ đăng nhập": {
+      "description": "Checkbox nhớ đăng nhập",
+      "selector": "#remember_me",
+      "element_type": "input",
+      "common_actions": [
+        "click"
+      ],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Nút đăng nhập": {
+      "description": "Nút đăng nhập",
+      "selector": "#btnLogin",
+      "element_type": "input",
+      "common_actions": [
+        "click"
+      ],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Input ẩn cho địa chỉ IP": {
+      "description": "Input ẩn cho địa chỉ IP",
+      "selector": "#ip_addr",
+      "element_type": "input",
+      "common_actions": [],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Input ẩn cho địa chỉ IP cục bộ": {
+      "description": "Input ẩn cho địa chỉ IP cục bộ",
+      "selector": "#local_ip",
+      "element_type": "input",
+      "common_actions": [],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Input ẩn cho thành phố": {
+      "description": "Input ẩn cho thành phố",
+      "selector": "#city",
+      "element_type": "input",
+      "common_actions": [],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Input ẩn cho vùng": {
+      "description": "Input ẩn cho vùng",
+      "selector": "#region",
+      "element_type": "input",
+      "common_actions": [],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Input ẩn cho quốc gia": {
+      "description": "Input ẩn cho quốc gia",
+      "selector": "#country",
+      "element_type": "input",
+      "common_actions": [],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Input ẩn cho vị trí": {
+      "description": "Input ẩn cho vị trí",
+      "selector": "#post",
+      "element_type": "input",
+      "common_actions": [],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Input ẩn cho tọa độ": {
+      "description": "Input ẩn cho tọa độ",
+      "selector": "#loc",
+      "element_type": "input",
+      "common_actions": [],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Command ẩn": {
+      "description": "Command ẩn",
+      "selector": "#cmd",
+      "element_type": "input",
+      "common_actions": [],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Link quên mật khẩu": {
+      "description": "Link quên mật khẩu",
+      "selector": "a[href*='quen-mat-khau']",
+      "element_type": "link",
+      "common_actions": [
+        "click"
+      ],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Link khôi phục mật khẩu": {
+      "description": "Link khôi phục mật khẩu",
+      "selector": "a[href*='khoi-phuc-mat-khau']",
+      "element_type": "link",
+      "common_actions": [
+        "click"
+      ],
+      "source": "ai_analysis"
+    },
+    "ai_desc:Nút phụ chỉnh chức năng nhớ đăng nhập": {
+      "description": "Nút phụ chỉnh chức năng nhớ đăng nhập",
+      "selector": "label[for='remember_me']",
+      "element_type": "dropdown",
+      "common_actions": [
+        "click"
+      ],
+      "source": "ai_analysis"
+    },
+    "page_info": {
+      "summary": "Trang đăng nhập cho phép người dùng nhập tên đăng nhập hoặc email và mật khẩu, với tùy chọn nhớ đăng nhập và các liên kết để khôi phục tài khoản.",
+      "source": "ai_analysis"
+    }
+  }
+}

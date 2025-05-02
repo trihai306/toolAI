@@ -1,0 +1,16 @@
+[
+  {
+    "action": "type",
+    "selector": "#email",
+    "value": "hainc"
+  },
+  {
+    "action": "type",
+    "selector": "#pass",
+    "value": "hai2k1"
+  },
+  {
+    "action": "click",
+    "selector": "button[type='submit']"
+  }
+]

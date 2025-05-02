@@ -1,0 +1,20 @@
+[
+  {
+    "action": "click",
+    "description": "Button text 'Đăng nhập'"
+  },
+  {
+    "action": "type",
+    "selector": "input[name='username']",
+    "value": "hainc"
+  },
+  {
+    "action": "type",
+    "selector": "input[name='password']",
+    "value": "Anhhai3006"
+  },
+  {
+    "action": "click",
+    "description": "Button text 'Đăng nhập'"
+  }
+]

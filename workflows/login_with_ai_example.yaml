@@ -1,0 +1,40 @@
+name: Login With AI
+description: Thử nghiệm đăng nhập sử dụng AI để xác định phần tử
+created_at: '2025-04-30T12:00:00.000000'
+steps:
+- action: navigate
+  params:
+    url: https://demo.applitools.com
+  timestamp: '2025-04-30T12:00:01.000000'
+- action: wait
+  params:
+    selector: '#username'
+    timeout: 30000
+    description: trường nhập tên đăng nhập
+  timestamp: '2025-04-30T12:00:02.000000'
+- action: type
+  params:
+    selector: '#username'
+    text: '{{username}}'
+    description: trường nhập tên đăng nhập
+  timestamp: '2025-04-30T12:00:03.000000'
+- action: type
+  params:
+    selector: '#password'
+    text: '{{password}}'
+    description: trường nhập mật khẩu
+  timestamp: '2025-04-30T12:00:04.000000'
+- action: find_and_click
+  params:
+    description: nút đăng nhập hoặc sign in
+  timestamp: '2025-04-30T12:00:05.000000'
+- action: wait
+  params:
+    selector: '.logged-user-w'
+    timeout: 30000
+    description: thông tin người dùng đã đăng nhập
+  timestamp: '2025-04-30T12:00:06.000000'
+- action: screenshot
+  params:
+    filename: login_success.png
+  timestamp: '2025-04-30T12:00:07.000000'

@@ -1,0 +1,16 @@
+[
+  {
+    "action": "type",
+    "selector": "#email",
+    "value": ""
+  },
+  {
+    "action": "type",
+    "selector": "#pass",
+    "value": ""
+  },
+  {
+    "action": "click",
+    "selector": "button[type='submit']"
+  }
+]

@@ -1,0 +1,21 @@
+/* Sidebar Fix CSS */
+.sidebar-nav ul.flex {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+}
+
+.sidebar-nav ul.flex li {
+    display: block !important;
+    width: 100% !important;
+}
+
+.sidebar-nav .flex.flex-col {
+    flex-direction: column !important;
+}
+
+/* Đảm bảo các mục trong sidebar hiển thị đúng */
+.sidebar-nav li a {
+    display: flex !important;
+    width: 100% !important;
+}

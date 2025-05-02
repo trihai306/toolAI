@@ -1,0 +1,206 @@
+{% extends "base.html" %} {% block title %}ToolAI - Dashboard{% endblock %} {% block page_title %}Dashboard{% endblock %} {% block content %}
+<div class="dashboard-container">
+    <!-- Quick Stats Section -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-terminal"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Lệnh Đã Chạy</h3>
+                    <p class="stat-value">125</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Thời Gian Tiết Kiệm</h3>
+                    <p class="stat-value">45 giờ</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Tác Vụ Hoàn Thành</h3>
+                    <p class="stat-value">38</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Người Dùng</h3>
+                    <p class="stat-value">8</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Actions Section -->
+    <section class="action-section">
+        <div class="command-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-code"></i>
+                    <h2>Nhập Lệnh Mới</h2>
+                </div>
+                <button class="help-btn" title="Trợ giúp">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+
+            <div class="card-body">
+                <form method="post" class="command-form">
+                    <div class="form-group">
+                        <label for="command">Lệnh:</label>
+                        <textarea id="command" name="command" rows="3" placeholder="Nhập lệnh của bạn ở đây..."></textarea>
+                    </div>
+
+                    <div class="form-options">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="save_history" name="save_history" checked>
+                            <label for="save_history">Lưu vào lịch sử</label>
+                        </div>
+
+                        <div class="dropdown">
+                            <select id="mode" name="mode">
+                                <option value="text">Chế độ văn bản</option>
+                                <option value="code">Chế độ mã</option>
+                                <option value="mixed">Chế độ hỗn hợp</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> Đặt lại
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Thực thi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="output-section">
+            <div class="output-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h2>Kết Quả Mới Nhất</h2>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-icon" title="Sao chép">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="btn-icon" title="Tải xuống">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn-icon" title="Chia sẻ">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="output-content">
+                        <div class="output-placeholder">
+                            <i class="fas fa-terminal placeholder-icon"></i>
+                            <p>Kết quả sẽ hiển thị ở đây sau khi chạy lệnh</p>
+                        </div>
+
+                        <!-- Output will appear here when available -->
+                        <div class="output-result" style="display: none;">
+                            <pre id="result-content"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Commands Section -->
+    <section class="history-section">
+        <div class="history-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-history"></i>
+                    <h2>Lệnh Gần Đây</h2>
+                </div>
+                <a href="#history" class="view-all">
+                    Xem tất cả <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="card-body">
+                <div class="history-list">
+                    <!-- List items will be dynamically populated -->
+                    <div class="history-item">
+                        <div class="history-icon success">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="history-details">
+                            <div class="history-command">python analyze_data.py --input data.csv --output results.json</div>
+                            <div class="history-meta">
+                                <span class="history-time"><i class="far fa-clock"></i> 2 giờ trước</span>
+                                <span class="history-duration"><i class="fas fa-stopwatch"></i> 1.5s</span>
+                            </div>
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn-icon" title="Chạy lại">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="history-item">
+                        <div class="history-icon error">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <div class="history-details">
+                            <div class="history-command">npm install -g webpack</div>
+                            <div class="history-meta">
+                                <span class="history-time"><i class="far fa-clock"></i> 3 giờ trước</span>
+                                <span class="history-duration"><i class="fas fa-stopwatch"></i> 3.2s</span>
+                            </div>
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn-icon" title="Chạy lại">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="history-item">
+                        <div class="history-icon success">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="history-details">
+                            <div class="history-command">git pull origin main</div>
+                            <div class="history-meta">
+                                <span class="history-time"><i class="far fa-clock"></i> 5 giờ trước</span>
+                                <span class="history-duration"><i class="fas fa-stopwatch"></i> 0.8s</span>
+                            </div>
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn-icon" title="Chạy lại">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

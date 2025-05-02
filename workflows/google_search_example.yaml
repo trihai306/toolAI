@@ -1,0 +1,31 @@
+name: Google Search
+description: Navigate to Google and search for a term
+created_at: '2025-04-30T00:00:00.000000'
+steps:
+- action: navigate
+  params:
+    url: https://www.google.com
+  timestamp: '2025-04-30T00:00:01.000000'
+- action: wait
+  params:
+    selector: 'input[name="q"]'
+    timeout: 30000
+  timestamp: '2025-04-30T00:00:02.000000'
+- action: type
+  params:
+    selector: 'input[name="q"]'
+    text: '{{search_term}}'
+  timestamp: '2025-04-30T00:00:03.000000'
+- action: click
+  params:
+    selector: 'input[name="btnK"],button[type="submit"]'
+  timestamp: '2025-04-30T00:00:04.000000'
+- action: wait
+  params:
+    selector: '#search'
+    timeout: 30000
+  timestamp: '2025-04-30T00:00:05.000000'
+- action: screenshot
+  params:
+    path: '../data/search_results.png'
+  timestamp: '2025-04-30T00:00:06.000000'

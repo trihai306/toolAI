@@ -1,0 +1,20 @@
+[
+  {
+    "action": "click",
+    "description": "Click on the login button or link"
+  },
+  {
+    "action": "type",
+    "selector": "input[name='username']",
+    "value": "hainc"
+  },
+  {
+    "action": "type",
+    "selector": "input[name='password']",
+    "value": "Anhhai3006@"
+  },
+  {
+    "action": "click",
+    "description": "Click on the submit button to log in"
+  }
+]

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiểm tra kết nối - Browser Automation Manager</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .animate-spin {
+            animation: spin 1.5s linear infinite;
+        }
+        
+        @keyframes bounce {
+            0%,
+            100% {
+                transform: translateY(-5%);
+                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+            }
+            50% {
+                transform: translateY(0);
+                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+            }
+        }
+        
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4 font-sans text-gray-800">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 border border-gray-100">
+        <div class="text-center mb-8">
+            <div class="flex justify-center">
+                <div class="bg-primary-100 p-4 rounded-full mb-4 inline-block">
+                    <i class="fas fa-robot text-5xl text-primary-600"></i>
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Browser Automation Manager</h1>
+            <p class="text-gray-600">Kiểm tra kết nối hệ thống</p>
+        </div>
+
+        <div class="space-y-5">
+            <div id="check-flask" class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm flex items-center transform transition-all duration-300 hover:shadow-md">
+                <div class="w-10 h-10 flex items-center justify-center mr-4 bg-blue-100 rounded-full shrink-0">
+                    <i class="fas fa-server text-primary-600"></i>
+                </div>
+                <div class="flex-grow">
+                    <p class="font-medium text-gray-800">Kiểm tra máy chủ Flask</p>
+                    <p class="text-sm text-gray-500 mt-1">Đang kiểm tra kết nối tới máy chủ...</p>
+                </div>
+                <div class="ml-2 shrink-0">
+                    <div class="animate-spin h-5 w-5 border-2 border-primary-500 border-t-transparent rounded-full"></div>
+                </div>
+            </div>
+
+            <div id="check-dependencies" class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm flex items-center transform transition-all duration-300 hover:shadow-md">
+                <div class="w-10 h-10 flex items-center justify-center mr-4 bg-blue-100 rounded-full shrink-0">
+                    <i class="fas fa-cubes text-primary-600"></i>
+                </div>
+                <div class="flex-grow">
+                    <p class="font-medium text-gray-800">Kiểm tra thư viện phụ thuộc</p>
+                    <p class="text-sm text-gray-500 mt-1">Đang kiểm tra các thư viện cần thiết...</p>
+                </div>
+                <div class="ml-2 shrink-0">
+                    <div class="animate-spin h-5 w-5 border-2 border-primary-500 border-t-transparent rounded-full"></div>
+                </div>
+            </div>
+
+            <div id="check-browser" class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm flex items-center transform transition-all duration-300 hover:shadow-md">
+                <div class="w-10 h-10 flex items-center justify-center mr-4 bg-blue-100 rounded-full shrink-0">
+                    <i class="fas fa-globe text-primary-600"></i>
+                </div>
+                <div class="flex-grow">
+                    <p class="font-medium text-gray-800">Kiểm tra trình duyệt</p>
+                    <p class="text-sm text-gray-500 mt-1">Đang kiểm tra cấu hình trình duyệt...</p>
+                </div>
+                <div class="ml-2 shrink-0">
+                    <div class="animate-spin h-5 w-5 border-2 border-primary-500 border-t-transparent rounded-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="status-message" class="mt-8 text-center hidden">
+            <div class="mb-4">
+                <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                    <i class="fas fa-check-circle text-4xl text-green-500"></i>
+                </div>
+            </div>
+            <p class="font-semibold text-green-600 text-lg">Tất cả các kiểm tra đã hoàn tất!</p>
+            <p class="text-gray-600 mt-2">Đang chuyển hướng đến ứng dụng chính...</p>
+            <div class="mt-2 flex justify-center">
+                <div class="w-16 h-1 bg-gray-200 rounded-full">
+                    <div class="animate-pulse w-full h-full bg-primary-500 rounded-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-message" class="mt-8 text-center hidden">
+            <div class="mb-4">
+                <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                    <i class="fas fa-exclamation-circle text-4xl text-red-500"></i>
+                </div>
+            </div>
+            <p class="font-semibold text-red-600 text-lg">Đã phát hiện lỗi!</p>
+            <div id="error-details" class="text-sm text-gray-700 mt-3 bg-red-50 p-4 rounded-lg border border-red-100 text-left"></div>
+            <div class="mt-6 flex flex-wrap justify-center gap-3">
+                <button id="retry-button" class="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2 rounded-lg font-medium transition duration-200 flex items-center shadow-sm">
+                    <i class="fas fa-sync-alt mr-2"></i> Thử lại
+                </button>
+                <button id="debug-button" class="bg-gray-700 hover:bg-gray-800 text-white px-5 py-2 rounded-lg font-medium transition duration-200 flex items-center shadow-sm">
+                    <i class="fas fa-bug mr-2"></i> Chế độ gỡ lỗi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-center text-gray-500 text-sm mt-6">Browser Automation Manager - Phiên bản 1.0.0</p>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkFlask = document.getElementById('check-flask');
+            const checkDependencies = document.getElementById('check-dependencies');
+            const checkBrowser = document.getElementById('check-browser');
+            const statusMessage = document.getElementById('status-message');
+            const errorMessage = document.getElementById('error-message');
+            const errorDetails = document.getElementById('error-details');
+            const retryButton = document.getElementById('retry-button');
+            const debugButton = document.getElementById('debug-button');
+
+            // Start checks
+            runChecks();
+
+            // Retry button
+            retryButton.addEventListener('click', function() {
+                errorMessage.classList.add('hidden');
+                resetChecks();
+                runChecks();
+            });
+
+            // Debug button
+            debugButton.addEventListener('click', function() {
+                // Show debug information in a new tab or redirect to debug page
+                window.location.href = '/debug';
+            });
+
+            function resetChecks() {
+                // Reset all check indicators
+                checkFlask.querySelector('div:last-child').innerHTML = '<div class="animate-spin h-5 w-5 border-2 border-primary-500 border-t-transparent rounded-full"></div>';
+                checkFlask.querySelector('p:last-child').textContent = 'Đang kiểm tra kết nối tới máy chủ...';
+                checkFlask.classList.remove('bg-green-50', 'bg-red-50', 'border-green-200', 'border-red-200');
+                checkFlask.classList.add('bg-white', 'border-gray-200');
+
+                checkDependencies.querySelector('div:last-child').innerHTML = '<div class="animate-spin h-5 w-5 border-2 border-primary-500 border-t-transparent rounded-full"></div>';
+                checkDependencies.querySelector('p:last-child').textContent = 'Đang kiểm tra các thư viện cần thiết...';
+                checkDependencies.classList.remove('bg-green-50', 'bg-red-50', 'border-green-200', 'border-red-200');
+                checkDependencies.classList.add('bg-white', 'border-gray-200');
+
+                checkBrowser.querySelector('div:last-child').innerHTML = '<div class="animate-spin h-5 w-5 border-2 border-primary-500 border-t-transparent rounded-full"></div>';
+                checkBrowser.querySelector('p:last-child').textContent = 'Đang kiểm tra cấu hình trình duyệt...';
+                checkBrowser.classList.remove('bg-green-50', 'bg-red-50', 'border-green-200', 'border-red-200');
+                checkBrowser.classList.add('bg-white', 'border-gray-200');
+            }
+
+            function runChecks() {
+                // Check 1: Flask Server
+                checkFlaskServer()
+                    .then(() => {
+                        // Mark as success
+                        checkFlask.querySelector('div:last-child').innerHTML = '<i class="fas fa-check-circle text-green-500 text-lg"></i>';
+                        checkFlask.querySelector('p:last-child').textContent = 'Kết nối máy chủ thành công';
+                        checkFlask.classList.remove('bg-white', 'border-gray-200');
+                        checkFlask.classList.add('bg-green-50', 'border-green-200');
+
+                        // Proceed to check 2
+                        return checkDependenciesStatus();
+                    })
+                    .then(() => {
+                        // Mark as success
+                        checkDependencies.querySelector('div:last-child').innerHTML = '<i class="fas fa-check-circle text-green-500 text-lg"></i>';
+                        checkDependencies.querySelector('p:last-child').textContent = 'Đã cài đặt đầy đủ thư viện';
+                        checkDependencies.classList.remove('bg-white', 'border-gray-200');
+                        checkDependencies.classList.add('bg-green-50', 'border-green-200');
+
+                        // Proceed to check 3
+                        return checkBrowserStatus();
+                    })
+                    .then(() => {
+                        // Mark as success
+                        checkBrowser.querySelector('div:last-child').innerHTML = '<i class="fas fa-check-circle text-green-500 text-lg"></i>';
+                        checkBrowser.querySelector('p:last-child').textContent = 'Cấu hình trình duyệt hợp lệ';
+                        checkBrowser.classList.remove('bg-white', 'border-gray-200');
+                        checkBrowser.classList.add('bg-green-50', 'border-green-200');
+
+                        // All checks passed
+                        setTimeout(() => {
+                            statusMessage.classList.remove('hidden');
+
+                            // Redirect to main app after a delay
+                            setTimeout(() => {
+                                window.location.href = '/';
+                            }, 2000);
+                        }, 500);
+                    })
+                    .catch(error => {
+                        console.error('Check failed:', error);
+                        errorDetails.textContent = error.message;
+                        errorMessage.classList.remove('hidden');
+                    });
+            }
+
+            function checkFlaskServer() {
+                return new Promise((resolve, reject) => {
+                    fetch('/api/status', {
+                            method: 'GET'
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Kết nối đến máy chủ thất bại: HTTP ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (!data.status || data.status !== 'ok') {
+                                throw new Error('Máy chủ không trả về trạng thái hợp lệ');
+                            }
+                            resolve();
+                        })
+                        .catch(error => {
+                            checkFlask.querySelector('div:last-child').innerHTML = '<i class="fas fa-times-circle text-red-500 text-lg"></i>';
+                            checkFlask.querySelector('p:last-child').textContent = 'Lỗi kết nối máy chủ';
+                            checkFlask.classList.remove('bg-white', 'border-gray-200');
+                            checkFlask.classList.add('bg-red-50', 'border-red-200');
+                            reject(new Error(`Lỗi kiểm tra máy chủ Flask: ${error.message}. Hãy đảm bảo Flask đang chạy và không có tường lửa chặn kết nối.`));
+                        });
+                });
+            }
+
+            function checkDependenciesStatus() {
+                return new Promise((resolve, reject) => {
+                    fetch('/api/check-dependencies', {
+                            method: 'GET'
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Kiểm tra thư viện thất bại: HTTP ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (!data.all_installed) {
+                                const missing = data.missing.join(', ');
+                                throw new Error(`Thiếu các thư viện: ${missing}`);
+                            }
+                            resolve();
+                        })
+                        .catch(error => {
+                            checkDependencies.querySelector('div:last-child').innerHTML = '<i class="fas fa-times-circle text-red-500 text-lg"></i>';
+                            checkDependencies.querySelector('p:last-child').textContent = 'Thiếu thư viện cần thiết';
+                            checkDependencies.classList.remove('bg-white', 'border-gray-200');
+                            checkDependencies.classList.add('bg-red-50', 'border-red-200');
+                            reject(new Error(`Lỗi kiểm tra thư viện: ${error.message}. Hãy chạy lệnh "pip install -r requirements.txt" để cài đặt các thư viện cần thiết.`));
+                        });
+                });
+            }
+
+            function checkBrowserStatus() {
+                return new Promise((resolve, reject) => {
+                    fetch('/api/check-browser-config', {
+                            method: 'GET'
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Kiểm tra trình duyệt thất bại: HTTP ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (!data.installed) {
+                                throw new Error(data.message || 'Cấu hình trình duyệt không hợp lệ');
+                            }
+                            resolve();
+                        })
+                        .catch(error => {
+                            checkBrowser.querySelector('div:last-child').innerHTML = '<i class="fas fa-times-circle text-red-500 text-lg"></i>';
+                            checkBrowser.querySelector('p:last-child').textContent = 'Lỗi cấu hình trình duyệt';
+                            checkBrowser.classList.remove('bg-white', 'border-gray-200');
+                            checkBrowser.classList.add('bg-red-50', 'border-red-200');
+                            reject(new Error(`Lỗi kiểm tra trình duyệt: ${error.message}. Hãy đảm bảo đã cài đặt Playwright và chạy lệnh "playwright install" để cài đặt trình duyệt cần thiết.`));
+                        });
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

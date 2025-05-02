@@ -1,0 +1,20 @@
+[
+  {
+    "action": "click",
+    "description": "Nhấn vào nút đăng nhập trên trang đầu"
+  },
+  {
+    "action": "type",
+    "selector": "#username",
+    "value": "hainc"
+  },
+  {
+    "action": "type",
+    "selector": "#password",
+    "value": "Anhhai3006"
+  },
+  {
+    "action": "click",
+    "description": "Nhấn vào nút Đăng nhập"
+  }
+]

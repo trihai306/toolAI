@@ -1,0 +1,16 @@
+base64io==1.0.3
+beautifulsoup4==4.12.2
+cryptography
+fake-useragent
+opencv-python
+openai>=1.76.0
+openai-agents==0.0.13
+pillow==10.1.0
+playwright==1.40.0
+playwright-stealth
+pytesseract
+python-dotenv==1.0.0
+pyyaml==6.0.1
+requests==2.31.0
+tiktoken==0.5.2
+nest_asyncio

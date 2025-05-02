@@ -1,0 +1,21 @@
+[
+  {
+    "action": "navigate",
+    "url": "https://toanthinhvn.com"
+  },
+  {
+    "action": "enter_text",
+    "selector": "input[name='username']",
+    "value": "hainc"
+  },
+  {
+    "action": "enter_text",
+    "selector": "input[name='password']",
+    "value": "Anhhai3006@"
+  },
+  {
+    "action": "click",
+    "selector": "button[type='submit']",
+    "text": "Đăng nhập"
+  }
+]
